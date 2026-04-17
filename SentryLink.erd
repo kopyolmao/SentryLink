@@ -1,0 +1,141 @@
+// title
+title SentryLink School Event Ticketing & Gate Monitoring Data Model
+
+// based on the active CI4 implementation and ci4_schema_upgrade.sql
+
+// tables
+users [icon: user, color: yellow] {
+  id int pk
+  student_id string
+  first_name string
+  last_name string
+  email string
+  password_hash string
+  session_token string
+  session_last_seen_at timestamp
+  role string
+  house string
+  year_level string
+  course string
+  email_verified boolean
+  is_active boolean
+  deleted_at timestamp
+  created_at timestamp
+  updated_at timestamp
+}
+
+events [icon: calendar, color: blue] {
+  id int pk
+  title string
+  description string
+  venue string
+  event_date date
+  start_time time
+  end_time time
+  is_free boolean
+  ticket_price decimal
+  max_capacity int
+  status string
+  deleted_at timestamp
+  created_by int fk
+  created_at timestamp
+  updated_at timestamp
+}
+
+activities [icon: activity, color: orange] {
+  id int pk
+  event_id int fk
+  title string
+  type string
+  house_name string
+  start_time time
+  end_time time
+  venue_area string
+  description string
+  deleted_at timestamp
+}
+
+tickets [icon: ticket, color: green] {
+  id int pk
+  user_id int fk
+  event_id int fk
+  ticket_code string
+  receipt_id string
+  payment_status string
+  download_qr_key string
+  download_qr_created_at timestamp
+  issued_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+admissions [icon: log-in, color: purple] {
+  id int pk
+  ticket_id int fk
+  user_id int fk
+  event_id int fk
+  scanned_by int fk
+  scanned_at timestamp
+  gate_location string
+  status string
+}
+
+notifications [icon: bell, color: red] {
+  id int pk
+  user_id int fk
+  title string
+  message string
+  type string
+  is_read boolean
+  created_at timestamp
+}
+
+audit_logs [icon: file-text, color: gray] {
+  id int pk
+  user_id int fk
+  action string
+  target_type string
+  target_id int
+  ip_address string
+  user_agent string
+  created_at timestamp
+}
+
+qr_blacklist [icon: slash, color: black] {
+  id int pk
+  token_jti string
+  user_id int fk
+  event_id int fk
+  used_at timestamp
+}
+
+event_attendee_cache [icon: users, color: lightblue] {
+  id int pk
+  event_id int fk
+  user_id int fk
+  student_id string
+  full_name string
+  course string
+  year_level string
+  payment_status string
+  generated_at timestamp
+}
+
+// relationships
+users.id > events.created_by // creates
+users.id > tickets.user_id // owns
+events.id > tickets.event_id // has
+events.id > activities.event_id // contains
+tickets.id > admissions.ticket_id // produces
+users.id > admissions.user_id // attends
+users.id > admissions.scanned_by // scans
+events.id > admissions.event_id // records
+users.id > notifications.user_id // receives
+users.id > audit_logs.user_id // creates
+users.id > qr_blacklist.user_id // used_by
+events.id > qr_blacklist.event_id // blocks_reuse_for
+events.id > event_attendee_cache.event_id // prepares
+users.id > event_attendee_cache.user_id // lists
+
+// conceptual M:N relationship:
+// users and events are many-to-many through tickets

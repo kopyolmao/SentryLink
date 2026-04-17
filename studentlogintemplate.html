@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SentryLink | Elevated Academic Vanguard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "on-background": "#e0e0ff",
+                "surface-container-highest": "#2f3255",
+                "secondary-fixed": "#e0e0ff",
+                "inverse-primary": "#672ff1",
+                "on-primary-fixed-variant": "#4e00d1",
+                "primary-fixed-dim": "#ccbdff",
+                "surface-container": "#1a1c3e",
+                "surface-tint": "#ccbdff",
+                "primary-fixed": "#e7deff",
+                "on-tertiary-container": "#bbc9d0",
+                "outline-variant": "#494456",
+                "on-secondary": "#2b2d50",
+                "surface-container-low": "#16183a",
+                "error": "#ffb4ab",
+                "on-primary-container": "#cdbeff",
+                "on-secondary-fixed": "#16183a",
+                "on-surface-variant": "#cac3d9",
+                "surface-variant": "#2f3255",
+                "on-primary": "#360096",
+                "secondary": "#c2c3ee",
+                "surface-container-lowest": "#080a2c",
+                "on-secondary-container": "#b4b5e0",
+                "on-tertiary-fixed-variant": "#3c494f",
+                "secondary-container": "#44466a",
+                "on-error-container": "#ffdad6",
+                "on-secondary-fixed-variant": "#424468",
+                "inverse-on-surface": "#2b2d50",
+                "surface": "#0d0f31",
+                "inverse-surface": "#e0e0ff",
+                "tertiary-fixed": "#d7e5ec",
+                "on-tertiary-fixed": "#101d23",
+                "outline": "#948ea2",
+                "secondary-fixed-dim": "#c2c3ee",
+                "tertiary-fixed-dim": "#bbc9d0",
+                "error-container": "#93000a",
+                "on-primary-fixed": "#1f005f",
+                "surface-container-high": "#252749",
+                "on-error": "#690005",
+                "surface-bright": "#343659",
+                "on-surface": "#e0e0ff",
+                "background": "#0d0f31",
+                "tertiary-container": "#48555b",
+                "on-tertiary": "#253238",
+                "primary": "#ccbdff",
+                "primary-container": "#5b19e6",
+                "surface-dim": "#0d0f31",
+                "tertiary": "#bbc9d0"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+            },
+            "fontFamily": {
+                "headline": ["Newsreader"],
+                "body": ["Manrope"],
+                "label": ["Manrope"]
+            },
+            "animation": {
+                "fade-in-up": "fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+                "shimmer": "shimmer 3s infinite",
+                "pulse-glow": "pulseGlow 2s ease-in-out infinite"
+            },
+            "keyframes": {
+                "fadeInUp": {
+                    "0%": { opacity: "0", transform: "translateY(20px)" },
+                    "100%": { opacity: "1", transform: "translateY(0)" }
+                },
+                "shimmer": {
+                    "0%": { backgroundPosition: "-200% 0" },
+                    "100%": { backgroundPosition: "200% 0" }
+                },
+                "pulseGlow": {
+                    "0%, 100%": { opacity: "0.5", filter: "blur(8px)" },
+                    "50%": { opacity: "0.8", filter: "blur(12px)" }
+                }
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .blueprint-grid {
+            background-size: 24px 24px;
+            background-image: 
+                linear-gradient(to right, rgba(73, 68, 86, 0.1) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(73, 68, 86, 0.1) 1px, transparent 1px);
+        }
+        .vanguard-glow {
+            background: radial-gradient(circle at center, rgba(91, 25, 230, 0.15) 0%, transparent 70%);
+        }
+        .inner-glow-btn:hover {
+            box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+        }
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        h1, h2, .headline {
+            font-family: 'Newsreader', serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Animation Utility Classes */
+        .animate-delay-100 { animation-delay: 100ms; }
+        .animate-delay-200 { animation-delay: 200ms; }
+        .animate-delay-300 { animation-delay: 300ms; }
+        .animate-delay-400 { animation-delay: 400ms; }
+        .animate-delay-500 { animation-delay: 500ms; }
+
+        .shimmer-text {
+            background: linear-gradient(90deg, transparent, rgba(204, 189, 255, 0.4), transparent);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
+        .btn-shimmer {
+            background: linear-gradient(
+                45deg, 
+                #ccbdff 0%, 
+                #ccbdff 40%, 
+                #e7deff 50%, 
+                #ccbdff 60%, 
+                #ccbdff 100%
+            );
+            background-size: 200% 200%;
+            animation: shimmer 4s infinite linear;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen selection:bg-primary-container selection:text-primary overflow-hidden">
+<!-- Global Depth Layers -->
+<div class="fixed inset-0 vanguard-glow pointer-events-none"></div>
+<div class="fixed inset-0 blueprint-grid pointer-events-none"></div>
+<main class="relative min-h-screen flex flex-col md:flex-row">
+<!-- Branding Section (Editorial/Prestige) -->
+<section class="relative flex-1 hidden md:flex flex-col justify-between p-16 overflow-hidden">
+<!-- Decorative Light Element -->
+<div class="absolute -top-20 -left-20 w-96 h-96 bg-primary-container/20 rounded-full blur-[120px]"></div>
+<!-- Logo Cluster -->
+<div class="relative z-10 animate-fade-in-up">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-gradient-to-tr from-primary-container to-primary flex items-center justify-center shadow-lg shadow-primary-container/20">
+<span class="material-symbols-outlined text-on-primary text-xl" style="font-variation-settings: 'FILL' 1;">security</span>
+</div>
+<span class="headline text-3xl font-light italic tracking-tight text-on-surface">SentryLink</span>
+</div>
+<div class="mt-4 h-px w-24 bg-gradient-to-r from-primary/40 to-transparent"></div>
+</div>
+<!-- Hero Statement -->
+<div class="relative z-10 max-w-xl">
+<div class="animate-fade-in-up animate-delay-100">
+<span class="label-md uppercase tracking-[0.2em] text-primary/70 font-semibold mb-6 block animate-pulse">Dynamic Ticket Encryption</span>
+</div>
+<h1 class="text-6xl lg:text-7xl font-light leading-tight text-on-surface animate-fade-in-up animate-delay-200">Revolutionizing <span class="italic font-normal">Event</span> <br/> Access with Dynamic <span class="text-primary-fixed-dim">Encryption</span>.</h1>
+<p class="mt-8 text-on-surface-variant text-lg leading-relaxed max-w-md font-body animate-fade-in-up animate-delay-300">Transform physical event tickets into encrypted, dynamic QR codes. Secure, non-transferable, and purpose-built for elite campus events.</p>
+</div>
+<!-- Footer Meta -->
+<div class="relative z-10 flex items-center gap-12 text-on-surface-variant/40 text-xs tracking-widest uppercase font-bold animate-fade-in-up animate-delay-500">
+<span>EST. MMXXIV</span>
+<span>Level 5 Clearance Required</span>
+<div class="flex-grow h-px bg-outline-variant/10"></div>
+</div>
+<!-- Ambient Image Layer -->
+<div class="absolute bottom-0 right-0 w-full h-full -z-10 opacity-30">
+<div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent"></div>
+<img class="w-full h-full object-cover grayscale opacity-40 transition-transform duration-[10s] hover:scale-110 ease-out" data-alt="Abstract architectural lines and dark glass geometry with deep blue and purple ambient lighting and subtle grain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwHiI4kY4uE0JW2W4TGQ41NqNjHwzHl8gToYz8koOR70G5xcaPFKX5fWt0dP0MGXtdT2J6DEjljyfUG5g5wGthE_e3fYQNX9oA4fCIE-AEmjo7ZCreTxVGjYXzWRKRdgjey0KCujBrrk-MFGAnSyDTZsbMgdxMZtjNCH_gHs1Yn6F2jzEA5NtZAYXnbLCHopJV1jAWCiQgMoYvUiDg-Pl0TOX16SEJJyOe3Vr5cPzgichYzz9XgnDHE_ugsgjnw8VNGx0o4oSXiKQ"/>
+</div>
+</section>
+<!-- Login Canvas -->
+<section class="relative flex-1 flex items-center justify-center p-6 md:p-12 z-20">
+<!-- Mobile Logo (Small Screens Only) -->
+<div class="absolute top-8 left-8 md:hidden flex items-center gap-2 animate-fade-in-up">
+<span class="headline text-2xl font-light italic text-on-surface">SentryLink</span>
+</div>
+<!-- Glassmorphic Card -->
+<div class="w-full max-w-md relative group animate-fade-in-up animate-delay-400">
+<!-- Card Glow -->
+<div class="absolute -inset-1 bg-gradient-to-r from-primary-container/20 to-secondary-container/20 rounded-[2rem] blur-2xl opacity-50 group-hover:opacity-100 group-hover:blur-3xl transition-all duration-1000"></div>
+<div class="relative bg-surface-container-low/60 backdrop-blur-3xl p-8 md:p-12 rounded-[2rem] shadow-[0_0_50px_rgba(0,0,0,0.3)] border border-outline-variant/10 transition-all duration-700 group-hover:bg-surface-container-low/80 group-hover:border-primary/20">
+<div class="mb-10">
+<h2 class="text-4xl font-light text-on-surface mb-2">Sign in</h2>
+<p class="text-on-surface-variant/70 font-body text-sm">Sign in to manage your dynamic event credentials.</p>
+</div>
+<form class="space-y-6" onsubmit="return false;">
+<!-- ID Field -->
+<div class="space-y-2">
+<label class="block text-[11px] uppercase tracking-widest text-on-surface-variant font-bold ml-1">Identity Access ID</label>
+<div class="relative group/input">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40 group-focus-within/input:text-primary transition-colors text-xl">account_circle</span>
+<input class="w-full bg-surface-container-lowest/40 border border-outline-variant/20 rounded-full py-4 pl-12 pr-6 text-on-surface placeholder:text-on-surface-variant/30 focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 transition-all font-body text-sm" placeholder="e.g. curator_v5_alpha" type="text"/>
+</div>
+</div>
+<!-- Password Field -->
+<div class="space-y-2">
+<label class="block text-[11px] uppercase tracking-widest text-on-surface-variant font-bold ml-1">Security Key</label>
+<div class="relative group/input">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40 group-focus-within/input:text-primary transition-colors text-xl">lock_open</span>
+<input class="w-full bg-surface-container-lowest/40 border border-outline-variant/20 rounded-full py-4 pl-12 pr-12 text-on-surface placeholder:text-on-surface-variant/30 focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 transition-all font-body text-sm" id="password-input" placeholder="••••••••••••" type="password"/>
+<button class="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40 hover:text-primary transition-all duration-300" onclick="togglePasswordVisibility()" type="button">
+<span class="material-symbols-outlined text-xl" id="password-icon">visibility</span>
+</button>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex items-center justify-between pt-2">
+<label class="flex items-center gap-2 cursor-pointer group/check">
+<div class="relative flex items-center justify-center">
+<input class="peer appearance-none w-5 h-5 border-2 border-outline-variant/30 rounded-md checked:bg-primary-container checked:border-primary-container transition-all" type="checkbox"/>
+<span class="material-symbols-outlined absolute text-xs text-on-primary opacity-0 peer-checked:opacity-100 transition-opacity" style="font-variation-settings: 'wght' 700;">check</span>
+</div>
+<span class="text-xs text-on-surface-variant group-hover:text-on-surface transition-colors">Maintain persistence</span>
+</label>
+<a class="text-xs text-primary/80 hover:text-primary transition-colors font-semibold" href="#">Forgot Key?</a>
+</div>
+<!-- Submit Button -->
+<button class="w-full relative overflow-hidden group/btn mt-4 rounded-full" type="submit">
+<div class="absolute inset-0 btn-shimmer opacity-90 group-hover/btn:opacity-100 transition-opacity"></div>
+<div class="relative flex items-center justify-center py-4 px-8 rounded-full inner-glow-btn text-on-primary font-bold tracking-wide transition-transform active:scale-95">Access Secure Tickets <span class="material-symbols-outlined ml-2 text-lg transition-transform group-hover/btn:translate-x-1">arrow_forward</span></div>
+</button>
+</form>
+<!-- Sign Up Prompt -->
+<div class="mt-12 pt-8 border-t border-outline-variant/10 text-center">
+<p class="text-on-surface-variant text-sm font-body">
+                            No credentials assigned? 
+                            <a class="text-on-surface font-bold ml-1 hover:text-primary transition-colors underline underline-offset-4 decoration-primary/30" href="#">Request Access</a>
+</p>
+</div>
+</div>
+</div>
+<!-- Tertiary Accents -->
+<div class="absolute bottom-12 right-12 hidden lg:flex flex-col items-end gap-2 text-right opacity-30 select-none animate-fade-in-up animate-delay-500">
+<span class="text-[10px] tracking-widest uppercase font-bold text-on-surface-variant">System Status: Nominal</span>
+<div class="flex gap-1">
+<div class="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse"></div>
+<div class="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse animate-delay-100"></div>
+<div class="w-1.5 h-1.5 rounded-full bg-primary/20 animate-pulse animate-delay-200"></div>
+</div>
+</div>
+</section>
+</main>
+<!-- Background Blueprint Layer (Secondary Texture) -->

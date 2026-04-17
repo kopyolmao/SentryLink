@@ -1,0 +1,211 @@
+title SentryLink System Flow
+direction right
+
+// based on the active CodeIgniter 4 implementation in app/ and app/Config/Routes.php
+
+Guest Entry [shape: oval, color: lightblue, icon: user]
+Existing Session [shape: oval, color: lightblue, icon: users]
+Session End [shape: oval, color: lightblue, icon: log-out]
+
+Authentication [color: purple, icon: lock] {
+  Open Role Login Page [color: purple, icon: log-in]
+  Press Sign In [shape: diamond, color: purple, icon: send]
+  Request ALTCHA Challenge [color: purple, icon: shield]
+  Request Image CAPTCHA [color: purple, icon: image]
+  Submit Login Form [shape: diamond, color: purple, icon: send]
+  Verify ALTCHA [shape: diamond, color: purple, icon: shield]
+  Verify Image CAPTCHA [shape: diamond, color: purple, icon: check-square]
+  Check Account Credentials [shape: diamond, color: purple, icon: user-check]
+  Open Forgot Password Page [color: purple, icon: key]
+  Check Reset Account [shape: diamond, color: purple, icon: user-check]
+  Send Temporary Password Email [color: purple, icon: mail]
+  Student Email Setup [color: purple, icon: mail]
+  Send Verification Code Email [color: purple, icon: send]
+  Verify Email Code [shape: diamond, color: purple, icon: check-circle]
+  Start Session [color: purple, icon: unlock]
+  Route User to Role Dashboard [shape: diamond, color: gray, icon: users]
+}
+
+Student Actions [color: green, icon: user] {
+  Student Dashboard [color: green, icon: home]
+  View Student Tickets [color: green, icon: ticket]
+  Open Student QR Page [color: green, icon: maximize]
+  Generate Dynamic QR [color: green, icon: refresh-cw]
+  Download First Entry QR [color: green, icon: download]
+  View Student Notifications [color: green, icon: bell]
+  Mark Notifications Read [color: green, icon: check]
+  Update Profile [color: green, icon: edit]
+  Open Student Settings [color: green, icon: settings]
+  Request Student Password Reset [color: green, icon: key]
+  Poll Student Ticket State [color: green, icon: refresh-cw]
+  Refresh Student Pages [color: green, icon: rotate-cw]
+}
+
+Officer Actions [color: blue, icon: shield] {
+  Officer Dashboard [color: blue, icon: home]
+  Open Scanner [color: blue, icon: camera]
+  Select Ongoing Event [color: blue, icon: calendar]
+  Scan QR Code [color: blue, icon: camera]
+  Validate Gate Scan [shape: diamond, color: blue, icon: check-circle]
+  Write IN OUT Admission Log [color: blue, icon: list]
+  View Gate Log [color: blue, icon: list]
+  Manual Lookup [color: blue, icon: search]
+  View Attendee Cache [color: blue, icon: database]
+  Open Officer Settings [color: blue, icon: settings]
+  Request Officer Password Reset [color: blue, icon: key]
+  Poll Gate Activity Feed [color: blue, icon: refresh-cw]
+  Refresh Officer Pages [color: blue, icon: rotate-cw]
+}
+
+Admin Actions [color: orange, icon: settings] {
+  Admin Dashboard [color: orange, icon: home]
+  Manage Events [color: orange, icon: calendar]
+  Create Update Event [color: orange, icon: edit]
+  Cancel Event [color: orange, icon: x-circle]
+  Manage Activities [color: orange, icon: activity]
+  Create Activity [color: orange, icon: plus-circle]
+  Start Event and Prepare Gate [color: orange, icon: play-circle]
+  System Auto Closes Expired Event [color: orange, icon: clock]
+  Manage Students [color: orange, icon: users]
+  Create Student Account [color: orange, icon: user-plus]
+  Delete Student Account [color: orange, icon: user-x]
+  Import Receipt CSV [color: orange, icon: upload]
+  Validate CSV Rows [shape: diamond, color: orange, icon: check-square]
+  Confirm Import [shape: diamond, color: orange, icon: check-circle]
+  Create Tickets [color: orange, icon: ticket]
+  Notify Students [color: orange, icon: send]
+  Show Import Success [color: orange, icon: check]
+  View Admin Tickets [color: orange, icon: ticket]
+  View Admissions [color: orange, icon: clipboard]
+  Send Broadcast Notifications [color: orange, icon: megaphone]
+  View Admin Reports [color: orange, icon: bar-chart]
+  View Admin Audit Logs [color: orange, icon: file-text]
+  Manage Staff Accounts [color: orange, icon: users]
+  Create Staff Account [color: orange, icon: user-plus]
+  Toggle Staff Active State [color: orange, icon: power]
+  Delete Staff Account [color: orange, icon: user-x]
+  Open Admin Settings [color: orange, icon: settings]
+  Request Admin Password Reset [color: orange, icon: key]
+  Poll Gate Activity Feed For Admin [color: orange, icon: refresh-cw]
+  Refresh Admin Pages [color: orange, icon: rotate-cw]
+}
+
+Director Actions [color: red, icon: briefcase] {
+  Director Dashboard [color: red, icon: home]
+  View Events [color: red, icon: calendar]
+  View Director Admissions [color: red, icon: clipboard]
+  View Director Reports [color: red, icon: bar-chart]
+  View Director Audit Logs [color: red, icon: file-text]
+  Open Director Settings [color: red, icon: settings]
+  Request Director Password Reset [color: red, icon: key]
+  Poll Gate Activity Feed For Director [color: red, icon: refresh-cw]
+  Refresh Director Pages [color: red, icon: rotate-cw]
+}
+
+Guest Entry > Open Role Login Page
+Guest Entry > Open Forgot Password Page
+Open Role Login Page > Press Sign In
+Press Sign In > Request ALTCHA Challenge: Secure requests only
+Press Sign In > Request Image CAPTCHA: Plain HTTP requests
+Request ALTCHA Challenge > Verify ALTCHA
+Verify ALTCHA > Request Image CAPTCHA: Secure requests
+Request Image CAPTCHA > Submit Login Form
+Submit Login Form > Verify Image CAPTCHA
+Verify Image CAPTCHA > Check Account Credentials
+Check Account Credentials > Student Email Setup: Student email not verified
+Student Email Setup > Send Verification Code Email
+Send Verification Code Email > Verify Email Code
+Verify Email Code > Start Session
+Check Account Credentials > Start Session: Valid account
+Open Forgot Password Page > Check Reset Account
+Check Reset Account > Send Temporary Password Email
+Send Temporary Password Email > Open Role Login Page: Return to login
+Start Session > Route User to Role Dashboard
+Existing Session > Route User to Role Dashboard
+
+Route User to Role Dashboard > Student Dashboard: Student
+Route User to Role Dashboard > Officer Dashboard: Officer
+Route User to Role Dashboard > Admin Dashboard: Admin
+Route User to Role Dashboard > Director Dashboard: Director
+
+Student Dashboard > View Student Tickets
+Student Dashboard > Open Student QR Page
+Student Dashboard > View Student Notifications
+Student Dashboard > Update Profile
+Student Dashboard > Open Student Settings
+View Student Tickets > Open Student QR Page
+Open Student QR Page > Generate Dynamic QR
+Generate Dynamic QR > Download First Entry QR: No prior gate logs
+View Student Notifications > Mark Notifications Read
+Student Dashboard > Poll Student Ticket State
+View Student Tickets > Poll Student Ticket State
+Open Student QR Page > Poll Student Ticket State
+Poll Student Ticket State > Refresh Student Pages: Event or gate state changed
+Open Student Settings > Request Student Password Reset
+Update Profile > Student Dashboard
+Student Dashboard > Session End
+
+Officer Dashboard > Open Scanner
+Officer Dashboard > View Gate Log
+Officer Dashboard > Manual Lookup
+Officer Dashboard > Open Officer Settings
+Officer Dashboard > Poll Gate Activity Feed
+Open Scanner > Select Ongoing Event
+Select Ongoing Event > Scan QR Code
+Select Ongoing Event > View Attendee Cache
+Scan QR Code > Validate Gate Scan
+Validate Gate Scan > Write IN OUT Admission Log: Valid live or download QR
+Write IN OUT Admission Log > View Gate Log
+View Gate Log > Poll Gate Activity Feed
+Manual Lookup > View Gate Log
+Poll Gate Activity Feed > Refresh Officer Pages: Gate activity changed
+Open Officer Settings > Request Officer Password Reset
+Officer Dashboard > Session End
+
+Admin Dashboard > Manage Events
+Admin Dashboard > Manage Students
+Admin Dashboard > Import Receipt CSV
+Admin Dashboard > View Admin Tickets
+Admin Dashboard > View Admissions
+Admin Dashboard > Send Broadcast Notifications
+Admin Dashboard > View Admin Reports
+Admin Dashboard > View Admin Audit Logs
+Admin Dashboard > Manage Staff Accounts
+Admin Dashboard > Open Admin Settings
+Admin Dashboard > Poll Gate Activity Feed For Admin
+Manage Events > Create Update Event
+Manage Events > Cancel Event
+Manage Events > Manage Activities
+Manage Events > Start Event and Prepare Gate
+Manage Events > System Auto Closes Expired Event: Past end time
+Manage Activities > Create Activity
+Manage Students > Create Student Account
+Manage Students > Delete Student Account
+Import Receipt CSV > Validate CSV Rows
+Validate CSV Rows > Confirm Import
+Confirm Import > Create Tickets
+Create Tickets > Notify Students
+Notify Students > Show Import Success
+Show Import Success > View Admin Tickets
+Manage Staff Accounts > Create Staff Account
+Manage Staff Accounts > Toggle Staff Active State
+Manage Staff Accounts > Delete Staff Account
+View Admissions > Poll Gate Activity Feed For Admin
+View Admin Reports > Poll Gate Activity Feed For Admin
+Poll Gate Activity Feed For Admin > Refresh Admin Pages: Gate activity changed
+Open Admin Settings > Request Admin Password Reset
+Admin Dashboard > Session End
+
+Director Dashboard > View Events
+Director Dashboard > View Director Admissions
+Director Dashboard > View Director Reports
+Director Dashboard > View Director Audit Logs
+Director Dashboard > Open Director Settings
+Director Dashboard > Poll Gate Activity Feed For Director
+View Director Admissions > Poll Gate Activity Feed For Director
+View Director Reports > Poll Gate Activity Feed For Director
+Poll Gate Activity Feed For Director > Refresh Director Pages: Gate activity changed
+Open Director Settings > Request Director Password Reset
+Director Dashboard > Session End
+
+Session End > Open Role Login Page

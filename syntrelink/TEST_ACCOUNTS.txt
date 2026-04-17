@@ -1,0 +1,50 @@
+====================================================
+SYNTRANKS (Syntrelink) - Demo/Test Accounts
+====================================================
+
+These accounts are for testing the migrated CodeIgniter 4 system.
+Password for all accounts: "Password123!"
+
+--- STUDENT ACCOUNTS ---
+| ID    | Student ID  | First Name | Last Name | Email                    | Course        | Year  |
+|-------|-------------|------------|-----------|--------------------------|---------------|-------|
+| 8     | STU001      | Juan       | Dela Cruz | juan.delacruz@aclc.edu   | BSBA          | 1st   |
+| 9     | STU002      | Maria      | Santos    | maria.santos@aclc.edu    | BSIT          | 2nd   |
+| 6     | STU003      | Pedro      | Garcia    | pedro.garcia@aclc.edu    | BSCRIM        | 3rd   |
+
+--- SSG/SSC OFFICER ACCOUNTS ---
+| ID    | Officer ID | First Name | Last Name | Email                      |
+|-------|------------|------------|-----------|----------------------------|
+| 10    | OFF001     | Mark       | Tan       | mark.tan@aclc.edu         |
+| 11    | OFF002     | Annie      | Lee       | annie.lee@aclc.edu        |
+
+--- ADMIN ACCOUNTS ---
+| ID    | Admin ID   | First Name | Last Name | Email                    |
+|-------|------------|------------|-----------|--------------------------|
+| 5     | ADMIN001   | System     | Administrator | admin@aclc.edu       |
+
+--- SCHOOL DIRECTOR ---
+| ID    | Director ID | First Name | Last Name | Email                     |
+|-------|-------------|------------|-----------|---------------------------|
+| 12    | DIR001     | School     | Director  | director@aclc.edu        |
+
+====================================================
+INSTRUCTIONS
+====================================================
+
+1. All passwords are set to: "Password123!"
+
+2. Seeded student accounts are ready for direct login in the migrated system.
+
+3. To add more test data:
+   - Use phpmyadmin at http://localhost/phpmyadmin
+   - Database: syntrelink_db
+   - Main tables: users, events, tickets, receipts, activities, admissions
+
+4. Testing URLs:
+   - Student login: http://localhost/syntrelink/s/auth/login
+   - Officer login: http://localhost/syntrelink/o/auth/login
+   - Admin login:  http://localhost/syntrelink/admin/auth/login
+   - Director login: http://localhost/syntrelink/director/auth/login
+
+====================================================

@@ -1,0 +1,39 @@
+# Local environment and editor files
+.env
+.codex
+.codex/
+syntrelink/.codex
+syntrelink/.codex/
+.DS_Store
+Thumbs.db
+
+# Runtime and generated files
+writable/cache/*
+writable/debugbar/*
+writable/logs/*
+writable/session/*
+writable/uploads/*
+!writable/cache/index.html
+!writable/debugbar/index.html
+!writable/logs/index.html
+!writable/session/index.html
+!writable/uploads/index.html
+
+# Local recovery artifacts and backups
+*.zip
+*.locked.bak
+*.empty.bak
+*.empty.bak/
+*.log
+syntrelink_db.sql
+
+# Unrelated local project artifacts found in this restored web root
+config.yml
+conversation.yml
+pyproject.toml
+topless/
+tools/
+
+# PHPUnit output
+build/
+.phpunit.cache/

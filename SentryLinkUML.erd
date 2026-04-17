@@ -1,0 +1,182 @@
+title SentryLink UML Class Model
+
+// based on the active CodeIgniter 4 implementation in app/
+// note: fields prefixed with "_" are diagram anchors for Eraser links, not PHP runtime properties
+// framework parents/interfaces such as Controller, BaseCommand, and FilterInterface are intentionally not expanded here
+
+BaseController [icon: box, color: gray] {
+  _class string pk
+  db BaseConnection
+  session Session
+  portal PortalService
+  mailer MailerService
+  user array
+  initController() method
+  fetchOne() method
+  fetchAll() method
+  scalar() method
+  execute() method
+  appNow() method
+  eventHasEnded() method
+  closeExpiredEvents() method
+  handleAuthenticatedPasswordReset() method
+  normalizeGateStatus() method
+  gateStateDetails() method
+}
+
+Home [icon: home, color: lightgray] {
+  _extendsBase string fk
+  index() method
+}
+
+AuthController [icon: lock, color: blue] {
+  _extendsBase string fk
+  studentLogin() method
+  studentLoginPost() method
+  officerLogin() method
+  officerLoginPost() method
+  adminLogin() method
+  adminLoginPost() method
+  directorLogin() method
+  directorLoginPost() method
+  forgotPassword() method
+  emailSetup() method
+  logout() method
+  loginAltchaChallenge() method
+  loginImageCaptcha() method
+}
+
+StudentController [icon: user, color: green] {
+  _extendsBase string fk
+  dashboard() method
+  myTickets() method
+  myQr() method
+  notifications() method
+  profile() method
+  settings() method
+  resetPassword() method
+  generateQr() method
+  notificationsFeed() method
+  ticketStateFeed() method
+  markNotificationsRead() method
+}
+
+OfficerController [icon: shield, color: orange] {
+  _extendsBase string fk
+  dashboard() method
+  scanner() method
+  gateLog() method
+  manualLookup() method
+  settings() method
+  validateQr() method
+  gateActivityStateFeed() method
+  gateLogFeed() method
+  attendeeCache() method
+}
+
+AdminController [icon: settings, color: purple] {
+  _extendsBase string fk
+  dashboard() method
+  events() method
+  activities() method
+  students() method
+  tickets() method
+  admissions() method
+  broadcast() method
+  reports() method
+  auditLogs() method
+  accounts() method
+  settings() method
+  importReceipts() method
+  importConfirm() method
+  importSuccess() method
+}
+
+DirectorController [icon: briefcase, color: red] {
+  _extendsBase string fk
+  dashboard() method
+  events() method
+  admissions() method
+  reports() method
+  auditLogs() method
+  settings() method
+}
+
+PortalService [icon: server, color: yellow] {
+  _service string pk
+  db BaseConnection
+  session Session
+  mailer MailerService
+  authResolved boolean
+  resolvedUser array
+  roleHome() method
+  roleLogin() method
+  roleLabel() method
+  fetchOne() method
+  fetchAll() method
+  scalar() method
+  execute() method
+  currentUserId() method
+  currentRole() method
+  currentUser() method
+  login() method
+  logout() method
+  establishAuthenticatedSession() method
+  passwordPolicyErrors() method
+  generateVerificationCode() method
+  generateTemporaryPassword() method
+  activeSessionConflictMessage() method
+  sendVerificationCodeEmail() method
+  issuePasswordReset() method
+  auditLog() method
+  notifyUser() method
+  generateTicketCode() method
+  prepareEventGate() method
+  qrSecret() method
+  createQrToken() method
+  ensureDownloadQrToken() method
+  validateQrToken() method
+  qrImage() method
+}
+
+MailerService [icon: mail, color: lightblue] {
+  _service string pk
+  loaded boolean
+  __construct() method
+  send() method
+}
+
+RoleFilter [icon: filter, color: teal] {
+  _portalService string fk
+  before() method
+  after() method
+}
+
+GuestFilter [icon: filter, color: cyan] {
+  _portalService string fk
+  before() method
+  after() method
+}
+
+RepairSystem [icon: tool, color: brown] {
+  name string
+  description string
+  run() method
+  runSqlFile() method
+  testAccounts() method
+}
+
+// inheritance
+Home._extendsBase > BaseController._class // extends
+AuthController._extendsBase > BaseController._class // extends
+StudentController._extendsBase > BaseController._class // extends
+OfficerController._extendsBase > BaseController._class // extends
+AdminController._extendsBase > BaseController._class // extends
+DirectorController._extendsBase > BaseController._class // extends
+
+// service associations
+BaseController.portal > PortalService._service // uses
+BaseController.mailer > MailerService._service // uses
+PortalService.mailer > MailerService._service // uses
+RoleFilter._portalService > PortalService._service // creates and uses
+GuestFilter._portalService > PortalService._service // creates and uses
