@@ -6,6 +6,9 @@ syntrelink/.codex
 syntrelink/.codex/
 .DS_Store
 Thumbs.db
+githubdetails
+githubdetails.pub
+githubdetails.txt
 
 # Runtime and generated files
 writable/cache/*
