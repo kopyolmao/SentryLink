@@ -8,7 +8,7 @@ class AuthController extends BaseController
 {
     public function studentLogin()
     {
-        return view('auth/login', [
+        return view('auth/login', $this->buildLoginViewData([
             'title'       => 'SentryLink | Student Login',
             'badge'       => 'Student Login',
             'portalLabel' => 'Student',
@@ -18,9 +18,8 @@ class AuthController extends BaseController
             'submitLabel' => 'Open Student Portal',
             'actionUrl'   => app_url('s/auth/login'),
             'forgotUrl'   => app_url('s/auth/forgot-password'),
-            'turnstileSiteKey' => (string) env('captcha.turnstileSiteKey', ''),
             'error'       => session()->getFlashdata('error') ?? '',
-        ]);
+        ]));
     }
 
     public function studentLoginPost()
@@ -30,7 +29,7 @@ class AuthController extends BaseController
 
     public function officerLogin()
     {
-        return view('auth/login', [
+        return view('auth/login', $this->buildLoginViewData([
             'title'       => 'SentryLink | Officer Login',
             'badge'       => 'Officer Login',
             'portalLabel' => 'Officer',
@@ -40,9 +39,8 @@ class AuthController extends BaseController
             'submitLabel' => 'Open Officer Portal',
             'actionUrl'   => app_url('o/auth/login'),
             'forgotUrl'   => app_url('o/auth/forgot-password'),
-            'turnstileSiteKey' => (string) env('captcha.turnstileSiteKey', ''),
             'error'       => session()->getFlashdata('error') ?? '',
-        ]);
+        ]));
     }
 
     public function officerLoginPost()
@@ -52,7 +50,7 @@ class AuthController extends BaseController
 
     public function adminLogin()
     {
-        return view('auth/login', [
+        return view('auth/login', $this->buildLoginViewData([
             'title'       => 'SentryLink | Admin Login',
             'badge'       => 'Admin Login',
             'portalLabel' => 'Admin',
@@ -62,9 +60,8 @@ class AuthController extends BaseController
             'submitLabel' => 'Open Admin Portal',
             'actionUrl'   => app_url('admin/auth/login'),
             'forgotUrl'   => app_url('admin/auth/forgot-password'),
-            'turnstileSiteKey' => (string) env('captcha.turnstileSiteKey', ''),
             'error'       => session()->getFlashdata('error') ?? '',
-        ]);
+        ]));
     }
 
     public function adminLoginPost()
@@ -74,7 +71,7 @@ class AuthController extends BaseController
 
     public function directorLogin()
     {
-        return view('auth/login', [
+        return view('auth/login', $this->buildLoginViewData([
             'title'       => 'SentryLink | Director Login',
             'badge'       => 'Director Login',
             'portalLabel' => 'Director',
@@ -84,9 +81,8 @@ class AuthController extends BaseController
             'submitLabel' => 'Open Director Portal',
             'actionUrl'   => app_url('director/auth/login'),
             'forgotUrl'   => app_url('director/auth/forgot-password'),
-            'turnstileSiteKey' => (string) env('captcha.turnstileSiteKey', ''),
             'error'       => session()->getFlashdata('error') ?? '',
-        ]);
+        ]));
     }
 
     public function directorLoginPost()
@@ -289,7 +285,7 @@ class AuthController extends BaseController
 
     private function handleLogin(array $allowedRoles)
     {
-        $captchaError = $this->verifyTurnstile();
+        $captchaError = $this->verifyLoginCaptcha();
         if ($captchaError !== null) {
             session()->setFlashdata('error', $captchaError);
 
@@ -307,6 +303,88 @@ class AuthController extends BaseController
         session()->setFlashdata('error', $result['message']);
 
         return redirect()->back()->withInput();
+    }
+
+    private function buildLoginViewData(array $data): array
+    {
+        $siteKey   = trim((string) env('captcha.turnstileSiteKey', ''));
+        $secretKey = trim((string) env('captcha.turnstileSecretKey', ''));
+
+        if ($siteKey !== '' && $secretKey !== '') {
+            $this->session->remove(['login_captcha_token', 'login_captcha_hash', 'login_captcha_expires']);
+
+            return $data + [
+                'turnstileSiteKey'   => $siteKey,
+                'loginCaptchaMode'   => 'turnstile',
+                'localCaptchaPrompt' => '',
+                'localCaptchaToken'  => '',
+            ];
+        }
+
+        $left   = random_int(1, 9);
+        $right  = random_int(1, 9);
+        $answer = (string) ($left + $right);
+        $token  = bin2hex(random_bytes(16));
+        $hash   = hash('sha256', $token . '|' . $answer);
+        $expiry = time() + 600;
+
+        $this->session->set([
+            'login_captcha_token'   => $token,
+            'login_captcha_hash'    => $hash,
+            'login_captcha_expires' => $expiry,
+        ]);
+
+        return $data + [
+            'turnstileSiteKey'   => '',
+            'loginCaptchaMode'   => 'local_math',
+            'localCaptchaPrompt' => $left . ' + ' . $right . ' = ?',
+            'localCaptchaToken'  => $token,
+        ];
+    }
+
+    private function verifyLoginCaptcha(): ?string
+    {
+        $siteKey   = trim((string) env('captcha.turnstileSiteKey', ''));
+        $secretKey = trim((string) env('captcha.turnstileSecretKey', ''));
+
+        if ($siteKey !== '' && $secretKey !== '') {
+            return $this->verifyTurnstile();
+        }
+
+        $postedToken = trim((string) $this->request->getPost('local_captcha_token'));
+        $postedAnswer = trim((string) $this->request->getPost('local_captcha_answer'));
+        $sessionToken = trim((string) $this->session->get('login_captcha_token'));
+        $sessionHash = trim((string) $this->session->get('login_captcha_hash'));
+        $expiresAt = (int) ($this->session->get('login_captcha_expires') ?? 0);
+
+        $this->session->remove(['login_captcha_token', 'login_captcha_hash', 'login_captcha_expires']);
+
+        if ($sessionToken === '' || $sessionHash === '' || $expiresAt <= 0) {
+            return 'Captcha challenge expired. Please try again.';
+        }
+
+        if (time() > $expiresAt) {
+            return 'Captcha challenge expired. Please try again.';
+        }
+
+        if ($postedToken === '' || $postedAnswer === '') {
+            return 'Please complete the captcha challenge.';
+        }
+
+        if (preg_match('/^\d{1,3}$/', $postedAnswer) !== 1) {
+            return 'Invalid captcha answer format.';
+        }
+
+        if (! hash_equals($sessionToken, $postedToken)) {
+            return 'Captcha verification failed. Please try again.';
+        }
+
+        $postedHash = hash('sha256', $postedToken . '|' . $postedAnswer);
+        if (! hash_equals($sessionHash, $postedHash)) {
+            return 'Captcha verification failed. Please try again.';
+        }
+
+        return null;
     }
 
     private function verifyTurnstile(): ?string
