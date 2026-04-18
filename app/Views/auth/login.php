@@ -420,7 +420,8 @@ $heroSystemTitle = trim((string) ($heroTitle ?? '')) !== '' ? (string) $heroTitl
                             <input type="hidden" name="local_captcha_token" value="<?= h((string) ($localCaptchaToken ?? '')) ?>">
                             <input type="text" name="local_captcha_answer" maxlength="10" autocomplete="off" class="w-full rounded-full border border-outline-variant/20 bg-surface-container-lowest/40 py-3.5 pl-12 pr-6 text-sm tracking-[0.18em] uppercase text-on-surface placeholder:text-on-surface-variant/30 focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/50" placeholder="Enter captcha text" required>
                         </div>
-                        <button type="button" onclick="window.location.reload()" class="ml-1 text-xs font-semibold text-primary/80 transition-colors hover:text-primary">Refresh captcha</button>
+                        <button type="button" class="ml-1 text-xs font-semibold text-primary/80 transition-colors hover:text-primary" data-captcha-refresh>Refresh captcha</button>
+                        <p class="ml-1 text-xs text-on-surface-variant/70" id="captchaRefreshStatus" hidden></p>
                     </div>
                 <?php endif; ?>
                 <div class="captcha-modal-actions pt-1">
@@ -451,6 +452,61 @@ document.querySelectorAll(".js-password-toggle").forEach((toggle) => {
         }
     });
 });
+
+const captchaRefreshButton = document.querySelector("[data-captcha-refresh]");
+const captchaImage = document.querySelector('img[alt="Captcha challenge"]');
+const captchaTokenInput = document.querySelector('input[name="local_captcha_token"]');
+const captchaAnswerInput = document.querySelector('input[name="local_captcha_answer"]');
+const captchaRefreshStatus = document.getElementById("captchaRefreshStatus");
+const captchaRefreshUrl = <?= json_encode((string) ($captchaRefreshUrl ?? '')) ?>;
+const pendingLoginRole = <?= json_encode((string) ($pendingLoginRole ?? '')) ?>;
+
+if (captchaRefreshButton && captchaRefreshUrl !== "" && pendingLoginRole !== "") {
+    captchaRefreshButton.addEventListener("click", async () => {
+        captchaRefreshButton.disabled = true;
+        if (captchaRefreshStatus) {
+            captchaRefreshStatus.hidden = true;
+            captchaRefreshStatus.textContent = "";
+        }
+
+        try {
+            const body = new FormData();
+            body.append("role", pendingLoginRole);
+
+            const response = await fetch(captchaRefreshUrl, {
+                method: "POST",
+                body,
+                credentials: "same-origin",
+                headers: { Accept: "application/json" },
+            });
+
+            const data = await response.json();
+            if (!response.ok || !data.ok || data.mode !== "local_image_text") {
+                throw new Error(data.message || "Failed to refresh captcha.");
+            }
+
+            if (captchaImage && typeof data.image === "string" && data.image !== "") {
+                captchaImage.src = data.image;
+            }
+
+            if (captchaTokenInput && typeof data.token === "string" && data.token !== "") {
+                captchaTokenInput.value = data.token;
+            }
+
+            if (captchaAnswerInput) {
+                captchaAnswerInput.value = "";
+                captchaAnswerInput.focus();
+            }
+        } catch (error) {
+            if (captchaRefreshStatus) {
+                captchaRefreshStatus.hidden = false;
+                captchaRefreshStatus.textContent = (error && error.message) ? error.message : "Captcha refresh failed.";
+            }
+        } finally {
+            captchaRefreshButton.disabled = false;
+        }
+    });
+}
 </script>
 <?php if (trim((string) ($turnstileSiteKey ?? '')) !== ''): ?>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>

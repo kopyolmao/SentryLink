@@ -10,6 +10,7 @@ $routes->get('dashboard', 'Home::index', ['filter' => 'role:student,ssg,admin,di
 $routes->get('login', static fn () => redirect()->to(site_url('s/auth/login')));
 $routes->get('logout', static fn () => redirect()->to(site_url('s/auth/logout')));
 $routes->get('forgot-password', static fn () => redirect()->to(site_url('s/auth/forgot-password')));
+$routes->post('auth/login-captcha-refresh', 'AuthController::refreshLoginCaptcha', ['filter' => 'guest']);
 
 // Legacy plain-PHP entry points
 $routes->get('login.php', static fn () => redirect()->to(site_url('s/auth/login')));

@@ -23,6 +23,8 @@ class AuthController extends BaseController
             'error'       => session()->getFlashdata('error') ?? '',
             'showCaptchaModal' => $modalState['show'],
             'pendingLoginEmail' => $modalState['email'],
+            'pendingLoginRole'  => 'student',
+            'captchaRefreshUrl' => app_url('auth/login-captcha-refresh'),
         ], $modalState['show']));
     }
 
@@ -48,6 +50,8 @@ class AuthController extends BaseController
             'error'       => session()->getFlashdata('error') ?? '',
             'showCaptchaModal' => $modalState['show'],
             'pendingLoginEmail' => $modalState['email'],
+            'pendingLoginRole'  => 'ssg',
+            'captchaRefreshUrl' => app_url('auth/login-captcha-refresh'),
         ], $modalState['show']));
     }
 
@@ -73,6 +77,8 @@ class AuthController extends BaseController
             'error'       => session()->getFlashdata('error') ?? '',
             'showCaptchaModal' => $modalState['show'],
             'pendingLoginEmail' => $modalState['email'],
+            'pendingLoginRole'  => 'admin',
+            'captchaRefreshUrl' => app_url('auth/login-captcha-refresh'),
         ], $modalState['show']));
     }
 
@@ -98,6 +104,8 @@ class AuthController extends BaseController
             'error'       => session()->getFlashdata('error') ?? '',
             'showCaptchaModal' => $modalState['show'],
             'pendingLoginEmail' => $modalState['email'],
+            'pendingLoginRole'  => 'director',
+            'captchaRefreshUrl' => app_url('auth/login-captcha-refresh'),
         ], $modalState['show']));
     }
 
@@ -297,6 +305,53 @@ class AuthController extends BaseController
         $this->portal->logout();
 
         return redirect()->to(app_url('s/auth/login'));
+    }
+
+    public function refreshLoginCaptcha()
+    {
+        $role = strtolower(trim((string) $this->request->getPost('role')));
+        $role = match ($role) {
+            'officer' => 'ssg',
+            default   => $role,
+        };
+
+        if (! in_array($role, ['student', 'ssg', 'admin', 'director'], true)) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'ok'      => false,
+                'message' => 'Invalid login role.',
+            ]);
+        }
+
+        if ($this->pendingLoginForRoles([$role]) === null) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'ok'      => false,
+                'message' => 'Login session expired. Please enter credentials again.',
+            ]);
+        }
+
+        $siteKey   = trim((string) env('captcha.turnstileSiteKey', ''));
+        $secretKey = trim((string) env('captcha.turnstileSecretKey', ''));
+
+        if ($siteKey !== '' && $secretKey !== '') {
+            return $this->response->setJSON([
+                'ok'   => true,
+                'mode' => 'turnstile',
+            ]);
+        }
+
+        $captcha = $this->buildLocalTextCaptcha();
+        $this->session->set([
+            'login_captcha_token'   => $captcha['token'],
+            'login_captcha_hash'    => $captcha['hash'],
+            'login_captcha_expires' => $captcha['expiry'],
+        ]);
+
+        return $this->response->setJSON([
+            'ok'    => true,
+            'mode'  => 'local_image_text',
+            'token' => $captcha['token'],
+            'image' => $captcha['image'],
+        ]);
     }
 
     private function handleLogin(array $allowedRoles)
