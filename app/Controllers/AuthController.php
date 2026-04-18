@@ -8,6 +8,8 @@ class AuthController extends BaseController
 {
     public function studentLogin()
     {
+        $modalState = $this->resolveLoginCaptchaModalState(['student']);
+
         return view('auth/login', $this->buildLoginViewData([
             'title'       => 'SentryLink | Student Login',
             'badge'       => 'Student Login',
@@ -19,7 +21,9 @@ class AuthController extends BaseController
             'actionUrl'   => app_url('s/auth/login'),
             'forgotUrl'   => app_url('s/auth/forgot-password'),
             'error'       => session()->getFlashdata('error') ?? '',
-        ]));
+            'showCaptchaModal' => $modalState['show'],
+            'pendingLoginEmail' => $modalState['email'],
+        ], $modalState['show']));
     }
 
     public function studentLoginPost()
@@ -29,6 +33,8 @@ class AuthController extends BaseController
 
     public function officerLogin()
     {
+        $modalState = $this->resolveLoginCaptchaModalState(['ssg']);
+
         return view('auth/login', $this->buildLoginViewData([
             'title'       => 'SentryLink | Officer Login',
             'badge'       => 'Officer Login',
@@ -40,7 +46,9 @@ class AuthController extends BaseController
             'actionUrl'   => app_url('o/auth/login'),
             'forgotUrl'   => app_url('o/auth/forgot-password'),
             'error'       => session()->getFlashdata('error') ?? '',
-        ]));
+            'showCaptchaModal' => $modalState['show'],
+            'pendingLoginEmail' => $modalState['email'],
+        ], $modalState['show']));
     }
 
     public function officerLoginPost()
@@ -50,6 +58,8 @@ class AuthController extends BaseController
 
     public function adminLogin()
     {
+        $modalState = $this->resolveLoginCaptchaModalState(['admin']);
+
         return view('auth/login', $this->buildLoginViewData([
             'title'       => 'SentryLink | Admin Login',
             'badge'       => 'Admin Login',
@@ -61,7 +71,9 @@ class AuthController extends BaseController
             'actionUrl'   => app_url('admin/auth/login'),
             'forgotUrl'   => app_url('admin/auth/forgot-password'),
             'error'       => session()->getFlashdata('error') ?? '',
-        ]));
+            'showCaptchaModal' => $modalState['show'],
+            'pendingLoginEmail' => $modalState['email'],
+        ], $modalState['show']));
     }
 
     public function adminLoginPost()
@@ -71,6 +83,8 @@ class AuthController extends BaseController
 
     public function directorLogin()
     {
+        $modalState = $this->resolveLoginCaptchaModalState(['director']);
+
         return view('auth/login', $this->buildLoginViewData([
             'title'       => 'SentryLink | Director Login',
             'badge'       => 'Director Login',
@@ -82,7 +96,9 @@ class AuthController extends BaseController
             'actionUrl'   => app_url('director/auth/login'),
             'forgotUrl'   => app_url('director/auth/forgot-password'),
             'error'       => session()->getFlashdata('error') ?? '',
-        ]));
+            'showCaptchaModal' => $modalState['show'],
+            'pendingLoginEmail' => $modalState['email'],
+        ], $modalState['show']));
     }
 
     public function directorLoginPost()
@@ -285,30 +301,71 @@ class AuthController extends BaseController
 
     private function handleLogin(array $allowedRoles)
     {
-        $captchaError = $this->verifyLoginCaptcha();
-        if ($captchaError !== null) {
-            session()->setFlashdata('error', $captchaError);
+        $captchaStep = strtolower(trim((string) $this->request->getPost('captcha_step')));
+
+        if ($captchaStep === 'cancel') {
+            $this->clearPendingLogin();
+
+            return redirect()->back();
+        }
+
+        if ($captchaStep === 'verify') {
+            $pendingLogin = $this->pendingLoginForRoles($allowedRoles);
+            if ($pendingLogin === null) {
+                session()->setFlashdata('error', 'Login session expired. Please enter your credentials again.');
+
+                return redirect()->back();
+            }
+
+            $captchaError = $this->verifyLoginCaptcha();
+            if ($captchaError !== null) {
+                session()->setFlashdata('error', $captchaError);
+
+                return redirect()->back();
+            }
+
+            $this->clearPendingLogin();
+
+            $result = $this->portal->login($pendingLogin['email'], $pendingLogin['password'], $allowedRoles);
+
+            if ($result['ok']) {
+                return redirect()->to($result['redirect']);
+            }
+
+            session()->setFlashdata('error', $result['message']);
 
             return redirect()->back()->withInput();
         }
 
         $email    = trim((string) $this->request->getPost('email'));
         $password = trim((string) $this->request->getPost('password'));
-        $result   = $this->portal->login($email, $password, $allowedRoles);
 
-        if ($result['ok']) {
-            return redirect()->to($result['redirect']);
+        if ($email === '' || $password === '') {
+            session()->setFlashdata('error', 'Email and password are required.');
+
+            return redirect()->back()->withInput();
         }
 
-        session()->setFlashdata('error', $result['message']);
+        $this->setPendingLogin($email, $password, $allowedRoles);
 
         return redirect()->back()->withInput();
     }
 
-    private function buildLoginViewData(array $data): array
+    private function buildLoginViewData(array $data, bool $captchaRequired = false): array
     {
         $siteKey   = trim((string) env('captcha.turnstileSiteKey', ''));
         $secretKey = trim((string) env('captcha.turnstileSecretKey', ''));
+
+        if (! $captchaRequired) {
+            $this->session->remove(['login_captcha_token', 'login_captcha_hash', 'login_captcha_expires']);
+
+            return $data + [
+                'turnstileSiteKey'   => '',
+                'loginCaptchaMode'   => 'none',
+                'localCaptchaToken'  => '',
+                'localCaptchaImage'  => '',
+            ];
+        }
 
         if ($siteKey !== '' && $secretKey !== '') {
             $this->session->remove(['login_captcha_token', 'login_captcha_hash', 'login_captcha_expires']);
@@ -380,6 +437,70 @@ class AuthController extends BaseController
         }
 
         return null;
+    }
+
+    private function resolveLoginCaptchaModalState(array $allowedRoles): array
+    {
+        $pendingLogin = $this->pendingLoginForRoles($allowedRoles);
+
+        if ($pendingLogin === null) {
+            return ['show' => false, 'email' => ''];
+        }
+
+        return [
+            'show'  => true,
+            'email' => (string) ($pendingLogin['email'] ?? ''),
+        ];
+    }
+
+    private function setPendingLogin(string $email, string $password, array $allowedRoles): void
+    {
+        $this->session->set('pending_login', [
+            'email'       => $email,
+            'password'    => $password,
+            'allowed'     => array_values($allowedRoles),
+            'expires_at'  => time() + 300,
+        ]);
+    }
+
+    private function pendingLoginForRoles(array $allowedRoles): ?array
+    {
+        $pending = $this->session->get('pending_login');
+        if (! is_array($pending)) {
+            return null;
+        }
+
+        $expiresAt = (int) ($pending['expires_at'] ?? 0);
+        if ($expiresAt <= 0 || time() > $expiresAt) {
+            $this->clearPendingLogin();
+
+            return null;
+        }
+
+        $pendingAllowed = $pending['allowed'] ?? [];
+        if (! is_array($pendingAllowed) || $pendingAllowed !== array_values($allowedRoles)) {
+            $this->clearPendingLogin();
+
+            return null;
+        }
+
+        $email = trim((string) ($pending['email'] ?? ''));
+        $password = (string) ($pending['password'] ?? '');
+        if ($email === '' || $password === '') {
+            $this->clearPendingLogin();
+
+            return null;
+        }
+
+        return [
+            'email'    => $email,
+            'password' => $password,
+        ];
+    }
+
+    private function clearPendingLogin(): void
+    {
+        $this->session->remove(['pending_login', 'login_captcha_token', 'login_captcha_hash', 'login_captcha_expires']);
     }
 
     /**

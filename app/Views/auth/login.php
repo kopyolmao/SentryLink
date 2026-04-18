@@ -161,6 +161,62 @@ h1, h2, .headline {
     line-height: 1.35;
 }
 
+.captcha-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+}
+
+.captcha-modal[hidden] {
+    display: none !important;
+}
+
+.captcha-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(4, 6, 24, 0.78);
+    backdrop-filter: blur(4px);
+}
+
+.captcha-modal-card {
+    position: relative;
+    width: min(100%, 28rem);
+    border-radius: 1.5rem;
+    border: 1px solid rgba(148, 142, 162, 0.25);
+    background: rgba(13, 15, 49, 0.96);
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.38);
+    padding: 1.25rem;
+    display: grid;
+    gap: 0.9rem;
+}
+
+.captcha-modal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.captcha-modal-actions .btn-like {
+    border: 1px solid rgba(148, 142, 162, 0.35);
+    background: rgba(22, 24, 58, 0.8);
+    color: #e0e0ff;
+    border-radius: 999px;
+    padding: 0.6rem 1rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.captcha-modal-actions .btn-like.primary {
+    border-color: transparent;
+    background: linear-gradient(90deg, #5b19e6, #7a3dff);
+    color: #f5f0ff;
+}
+
 @media (max-width: 1023px) {
     .auth-panel {
         padding-top: 4.5rem;
@@ -310,24 +366,7 @@ $heroSystemTitle = trim((string) ($heroTitle ?? '')) !== '' ? (string) $heroTitl
                         <a href="<?= h($forgotUrl) ?>" class="text-xs font-semibold text-primary/80 transition-colors hover:text-primary">Forgot password?</a>
                     </div>
 
-                    <?php if (trim((string) ($turnstileSiteKey ?? '')) !== ''): ?>
-                        <div class="pt-1">
-                            <div class="cf-turnstile" data-sitekey="<?= h((string) $turnstileSiteKey) ?>" data-theme="dark" data-size="flexible"></div>
-                        </div>
-                    <?php elseif (($loginCaptchaMode ?? '') === 'local_image_text'): ?>
-                        <div class="space-y-2 pt-1">
-                            <label class="ml-1 block text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Captcha</label>
-                            <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-lowest/30 p-3">
-                                <img src="<?= h((string) ($localCaptchaImage ?? '')) ?>" alt="Captcha challenge" class="h-14 w-full rounded-md object-cover">
-                            </div>
-                            <div class="group/input relative">
-                                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-xl text-on-surface-variant/40 transition-colors group-focus-within/input:text-primary">shield_question</span>
-                                <input type="hidden" name="local_captcha_token" value="<?= h((string) ($localCaptchaToken ?? '')) ?>">
-                                <input type="text" name="local_captcha_answer" maxlength="10" autocomplete="off" class="w-full rounded-full border border-outline-variant/20 bg-surface-container-lowest/40 py-3.5 pl-12 pr-6 text-sm tracking-[0.18em] uppercase text-on-surface placeholder:text-on-surface-variant/30 focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/50" placeholder="Enter captcha text" required>
-                            </div>
-                            <button type="button" onclick="window.location.reload()" class="ml-1 text-xs font-semibold text-primary/80 transition-colors hover:text-primary">Refresh captcha</button>
-                        </div>
-                    <?php endif; ?>
+                    <p class="text-xs text-on-surface-variant/70">After you click login, a captcha check will appear on the next step.</p>
 
                     <button type="submit" class="group/btn relative mt-1 block w-full overflow-hidden rounded-full">
                         <div class="btn-shimmer absolute inset-0 opacity-90 transition-opacity group-hover/btn:opacity-100"></div>
@@ -356,6 +395,46 @@ $heroSystemTitle = trim((string) ($heroTitle ?? '')) !== '' ? (string) $heroTitl
         </div>
     </section>
 </main>
+<?php if ((bool) ($showCaptchaModal ?? false)): ?>
+    <div class="captcha-modal" id="captchaModal">
+        <div class="captcha-modal-backdrop"></div>
+        <div class="captcha-modal-card">
+            <h3 class="text-xl font-semibold text-on-surface">Captcha Verification</h3>
+            <p class="text-sm text-on-surface-variant">
+                Continue signing in as <strong><?= h((string) ($pendingLoginEmail ?? 'your account')) ?></strong>.
+            </p>
+
+            <form method="POST" action="<?= h($actionUrl) ?>" class="space-y-3">
+                <input type="hidden" name="captcha_step" value="verify">
+                <?php if (trim((string) ($turnstileSiteKey ?? '')) !== ''): ?>
+                    <div>
+                        <div class="cf-turnstile" data-sitekey="<?= h((string) $turnstileSiteKey) ?>" data-theme="dark" data-size="flexible"></div>
+                    </div>
+                <?php elseif (($loginCaptchaMode ?? '') === 'local_image_text'): ?>
+                    <div class="space-y-2">
+                        <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-lowest/30 p-3">
+                            <img src="<?= h((string) ($localCaptchaImage ?? '')) ?>" alt="Captcha challenge" class="h-14 w-full rounded-md object-cover">
+                        </div>
+                        <div class="group/input relative">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-xl text-on-surface-variant/40 transition-colors group-focus-within/input:text-primary">shield_question</span>
+                            <input type="hidden" name="local_captcha_token" value="<?= h((string) ($localCaptchaToken ?? '')) ?>">
+                            <input type="text" name="local_captcha_answer" maxlength="10" autocomplete="off" class="w-full rounded-full border border-outline-variant/20 bg-surface-container-lowest/40 py-3.5 pl-12 pr-6 text-sm tracking-[0.18em] uppercase text-on-surface placeholder:text-on-surface-variant/30 focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/50" placeholder="Enter captcha text" required>
+                        </div>
+                        <button type="button" onclick="window.location.reload()" class="ml-1 text-xs font-semibold text-primary/80 transition-colors hover:text-primary">Refresh captcha</button>
+                    </div>
+                <?php endif; ?>
+                <div class="captcha-modal-actions pt-1">
+                    <button type="submit" class="btn-like primary">Verify & Continue</button>
+                </div>
+            </form>
+
+            <form method="POST" action="<?= h($actionUrl) ?>" class="captcha-modal-actions">
+                <input type="hidden" name="captcha_step" value="cancel">
+                <button type="submit" class="btn-like">Cancel</button>
+            </form>
+        </div>
+    </div>
+<?php endif; ?>
 <div class="pointer-events-none fixed right-0 top-0 -z-10 h-1/3 w-1/3 bg-primary/5 blur-[150px]"></div>
 <div class="pointer-events-none fixed bottom-0 left-0 -z-10 h-1/4 w-1/4 bg-primary-container/10 blur-[150px]"></div>
 <script>
