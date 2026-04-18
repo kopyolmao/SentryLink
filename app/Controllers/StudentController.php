@@ -123,13 +123,27 @@ class StudentController extends BaseController
 
         if ($this->request->getMethod() === 'POST') {
             try {
-                $firstName = trim((string) $this->request->getPost('first_name'));
-                $lastName  = trim((string) $this->request->getPost('last_name'));
-                $course    = trim((string) $this->request->getPost('course'));
-                $yearLevel = trim((string) $this->request->getPost('year_level'));
-                $house     = trim((string) $this->request->getPost('house'));
+                $firstName = $this->portal->sanitizeNameInput((string) $this->request->getPost('first_name'), 50);
+                $lastName  = $this->portal->sanitizeNameInput((string) $this->request->getPost('last_name'), 50);
+                $course    = $this->portal->sanitizePlainInput((string) $this->request->getPost('course'), 100, true, true);
+                $yearLevel = $this->portal->sanitizePlainInput((string) $this->request->getPost('year_level'), 50, true, true);
+                $house     = $this->portal->sanitizePlainInput((string) $this->request->getPost('house'), 100, true, true);
                 $profilePhotoPath = null;
                 $photoUploaded = false;
+
+                if (! $this->portal->isValidPersonName($firstName)) {
+                    throw new \RuntimeException('First name must be 1-50 characters and contain only letters, spaces, apostrophes, dots, or hyphens.');
+                }
+                if (! $this->portal->isValidPersonName($lastName)) {
+                    throw new \RuntimeException('Last name must be 1-50 characters and contain only letters, spaces, apostrophes, dots, or hyphens.');
+                }
+
+                $hasTextChanges =
+                    $firstName !== (string) ($this->user['first_name'] ?? '')
+                    || $lastName !== (string) ($this->user['last_name'] ?? '')
+                    || $course !== (string) ($this->user['course'] ?? '')
+                    || $yearLevel !== (string) ($this->user['year_level'] ?? '')
+                    || $house !== (string) ($this->user['house'] ?? '');
 
                 $profilePhoto = $this->request->getFile('profile_photo');
                 if ($profilePhoto && $profilePhoto->isValid() && ! $profilePhoto->hasMoved()) {
@@ -170,6 +184,12 @@ class StudentController extends BaseController
                     }
                 } elseif ($profilePhoto && ! $profilePhoto->isValid() && $profilePhoto->getError() !== UPLOAD_ERR_NO_FILE) {
                     throw new \RuntimeException($profilePhoto->getErrorString());
+                }
+
+                if (! $hasTextChanges && ! $photoUploaded) {
+                    $message = 'No profile changes detected.';
+
+                    return view('student/profile', ['message' => $message, 'error' => $error, 'user' => $this->user]);
                 }
 
                 if ($profilePhotoPath !== null) {

@@ -112,7 +112,7 @@ $profileInitial = strtoupper(substr(trim((string) ($user['first_name'] ?? 'S')),
     <?php if ($message !== ''): ?><div class="alert alert-success"><?= h($message) ?></div><?php endif; ?>
     <?php if (($error ?? '') !== ''): ?><div class="alert alert-danger"><?= h((string) $error) ?></div><?php endif; ?>
     <div class="profile-copy">Student ID and bound email are controlled by the system and cannot be edited here.</div>
-    <form method="POST" enctype="multipart/form-data" class="profile-form">
+    <form method="POST" enctype="multipart/form-data" class="profile-form" id="studentProfileForm">
         <div class="profile-field span-12">
             <div class="profile-media">
                 <?php if ($profilePhotoUrl !== ''): ?>
@@ -130,12 +130,12 @@ $profileInitial = strtoupper(substr(trim((string) ($user['first_name'] ?? 'S')),
 
         <div class="profile-field span-6">
             <label class="form-label">First Name</label>
-            <input class="form-control" name="first_name" value="<?= h($user['first_name']) ?>" required>
+            <input class="form-control js-profile-track" name="first_name" value="<?= h($user['first_name']) ?>" maxlength="50" pattern="[A-Za-z][A-Za-z .'-]{0,49}" title="Use 1-50 letters with spaces, apostrophes, dots, or hyphens." required>
         </div>
 
         <div class="profile-field span-6">
             <label class="form-label">Last Name</label>
-            <input class="form-control" name="last_name" value="<?= h($user['last_name']) ?>" required>
+            <input class="form-control js-profile-track" name="last_name" value="<?= h($user['last_name']) ?>" maxlength="50" pattern="[A-Za-z][A-Za-z .'-]{0,49}" title="Use 1-50 letters with spaces, apostrophes, dots, or hyphens." required>
         </div>
 
         <div class="profile-field span-6">
@@ -150,25 +150,58 @@ $profileInitial = strtoupper(substr(trim((string) ($user['first_name'] ?? 'S')),
 
         <div class="profile-field span-4">
             <label class="form-label">Course</label>
-            <input class="form-control" name="course" value="<?= h($user['course']) ?>">
+            <input class="form-control js-profile-track" name="course" value="<?= h($user['course']) ?>" maxlength="100">
         </div>
 
         <div class="profile-field span-4">
             <label class="form-label">Year Level</label>
-            <input class="form-control" name="year_level" value="<?= h($user['year_level']) ?>">
+            <input class="form-control js-profile-track" name="year_level" value="<?= h($user['year_level']) ?>" maxlength="50">
         </div>
 
         <div class="profile-field span-4">
             <label class="form-label">House</label>
-            <input class="form-control" name="house" value="<?= h($user['house']) ?>">
+            <input class="form-control js-profile-track" name="house" value="<?= h($user['house']) ?>" maxlength="100">
         </div>
 
         <div class="profile-field span-12">
             <div class="profile-actions">
-                <button class="btn btn-primary">Save Profile</button>
+                <button class="btn btn-primary" id="saveProfileBtn" disabled>Save Profile</button>
                 <a class="btn btn-outline-light" href="<?= h(app_url('s/settings/reset-password')) ?>">Change Password</a>
             </div>
         </div>
     </form>
 </div>
-<?php shell_end(); ?>
+<?php
+$script = '<script>
+const studentProfileForm = document.getElementById("studentProfileForm");
+const saveProfileBtn = document.getElementById("saveProfileBtn");
+const profileFields = studentProfileForm ? studentProfileForm.querySelectorAll(".js-profile-track") : [];
+const profilePhotoInput = document.getElementById("profile_photo");
+const initialProfileValues = {};
+
+if (studentProfileForm && saveProfileBtn) {
+    profileFields.forEach((field) => {
+        initialProfileValues[field.name] = field.value;
+    });
+
+    const updateSaveState = () => {
+        const textChanged = Array.from(profileFields).some((field) => field.value !== (initialProfileValues[field.name] || ""));
+        const photoChanged = !!(profilePhotoInput && profilePhotoInput.files && profilePhotoInput.files.length > 0);
+        saveProfileBtn.disabled = !(textChanged || photoChanged);
+    };
+
+    profileFields.forEach((field) => {
+        field.addEventListener("input", updateSaveState);
+        field.addEventListener("change", updateSaveState);
+    });
+
+    if (profilePhotoInput) {
+        profilePhotoInput.addEventListener("change", updateSaveState);
+    }
+
+    updateSaveState();
+}
+</script>';
+
+shell_end($script);
+?>

@@ -392,11 +392,17 @@ class AuthController extends BaseController
             return redirect()->back()->withInput();
         }
 
-        $email    = trim((string) $this->request->getPost('email'));
-        $password = trim((string) $this->request->getPost('password'));
+        $email    = $this->portal->sanitizeEmailInput((string) $this->request->getPost('email'));
+        $password = $this->portal->sanitizePasswordInput((string) $this->request->getPost('password'));
 
         if ($email === '' || $password === '') {
             session()->setFlashdata('error', 'Email and password are required.');
+
+            return redirect()->back()->withInput();
+        }
+
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            session()->setFlashdata('error', 'Enter a valid email address.');
 
             return redirect()->back()->withInput();
         }

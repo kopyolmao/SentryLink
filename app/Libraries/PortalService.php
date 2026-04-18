@@ -96,9 +96,56 @@ class PortalService
         return $this->resolveAuthenticatedUser();
     }
 
+    public function sanitizeEmailInput(string $email): string
+    {
+        $email = $this->sanitizePlainInput($email, 254, true, true);
+
+        return strtolower($email);
+    }
+
+    public function sanitizePasswordInput(string $password): string
+    {
+        $password = str_replace("\0", '', $password);
+        $password = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $password) ?? $password;
+
+        return function_exists('mb_substr') ? mb_substr($password, 0, 255) : substr($password, 0, 255);
+    }
+
+    public function sanitizeNameInput(string $value, int $maxLength = 50): string
+    {
+        $value = $this->sanitizePlainInput($value, $maxLength, true, true);
+
+        return preg_replace('/\s+/', ' ', $value) ?? $value;
+    }
+
+    public function sanitizePlainInput(string $value, int $maxLength = 255, bool $stripTags = true, bool $trim = true): string
+    {
+        $clean = str_replace("\0", '', $value);
+        $clean = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $clean) ?? $clean;
+        if ($stripTags) {
+            $clean = strip_tags($clean);
+        }
+        if ($trim) {
+            $clean = trim($clean);
+        }
+
+        return function_exists('mb_substr') ? mb_substr($clean, 0, $maxLength) : substr($clean, 0, $maxLength);
+    }
+
+    public function isValidPersonName(string $value): bool
+    {
+        if ($value === '') {
+            return false;
+        }
+
+        return preg_match("/^[a-zA-Z][a-zA-Z .'-]{0,49}$/", $value) === 1;
+    }
+
     public function login(string $email, string $password, ?array $allowedRoles = null): array
     {
-        $identifier = strtolower(trim($email));
+        $email = $this->sanitizeEmailInput($email);
+        $password = $this->sanitizePasswordInput($password);
+        $identifier = $email;
         $ipAddress  = $this->requestIpAddress();
         $lockSeconds = $this->activeLoginLockSeconds($identifier, $ipAddress);
 

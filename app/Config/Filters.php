@@ -3,6 +3,7 @@
 namespace Config;
 
 use App\Filters\GuestFilter;
+use App\Filters\InputSanitizeFilter;
 use App\Filters\RoleFilter;
 use CodeIgniter\Config\Filters as BaseFilters;
 use CodeIgniter\Filters\Cors;
@@ -37,6 +38,7 @@ class Filters extends BaseFilters
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
         'guest'         => GuestFilter::class,
+        'sanitizeinput' => InputSanitizeFilter::class,
         'role'          => RoleFilter::class,
     ];
 
@@ -76,7 +78,8 @@ class Filters extends BaseFilters
         'before' => [
             // 'honeypot',
             // 'csrf',
-            // 'invalidchars',
+            'sanitizeinput',
+            'invalidchars',
         ],
         'after' => [
             // 'honeypot',

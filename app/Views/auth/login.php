@@ -346,7 +346,7 @@ $heroSystemTitle = trim((string) ($heroTitle ?? '')) !== '' ? (string) $heroTitl
                         <label class="ml-1 block text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Email Address</label>
                         <div class="group/input relative">
                             <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-xl text-on-surface-variant/40 transition-colors group-focus-within/input:text-primary">alternate_email</span>
-                            <input type="email" name="email" value="<?= h(old('email')) ?>" class="w-full rounded-full border border-outline-variant/20 bg-surface-container-lowest/40 py-3.5 pl-12 pr-6 text-sm text-on-surface placeholder:text-on-surface-variant/30 focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/50" placeholder="name@school.edu" required>
+                            <input type="email" name="email" maxlength="254" value="<?= h(old('email')) ?>" class="w-full rounded-full border border-outline-variant/20 bg-surface-container-lowest/40 py-3.5 pl-12 pr-6 text-sm text-on-surface placeholder:text-on-surface-variant/30 focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/50" placeholder="name@school.edu" required>
                         </div>
                     </div>
 
@@ -354,7 +354,7 @@ $heroSystemTitle = trim((string) ($heroTitle ?? '')) !== '' ? (string) $heroTitl
                         <label class="ml-1 block text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Password</label>
                         <div class="group/input relative">
                             <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-xl text-on-surface-variant/40 transition-colors group-focus-within/input:text-primary">lock_open</span>
-                            <input id="<?= h($passwordFieldId) ?>" type="password" name="password" class="js-password-input w-full rounded-full border border-outline-variant/20 bg-surface-container-lowest/40 py-3.5 pl-12 pr-14 text-sm text-on-surface placeholder:text-on-surface-variant/30 focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/50" placeholder="Enter your password" required>
+                            <input id="<?= h($passwordFieldId) ?>" type="password" name="password" maxlength="255" class="js-password-input w-full rounded-full border border-outline-variant/20 bg-surface-container-lowest/40 py-3.5 pl-12 pr-14 text-sm text-on-surface placeholder:text-on-surface-variant/30 focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/50" placeholder="Enter your password" required>
                             <button type="button" class="js-password-toggle absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40 transition-colors hover:text-primary" aria-label="Show password" aria-pressed="false">
                                 <span class="material-symbols-outlined text-xl js-password-icon">visibility</span>
                             </button>
