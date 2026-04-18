@@ -104,6 +104,7 @@
 <?php if ($error !== ''): ?><div class="alert alert-danger"><?= h($error) ?></div><?php endif; ?>
 <div class="panel">
     <h3 class="h5 mb-3"><?= $editEvent ? 'Edit Event' : 'Create Event' ?></h3>
+    <?php $isFreeChecked = (int) ($editEvent['is_free'] ?? 0) === 1; ?>
     <form method="POST" class="event-form">
         <input type="hidden" name="event_id" value="<?= h($editEvent['id'] ?? '') ?>">
 
@@ -146,9 +147,9 @@
             </select>
         </div>
 
-        <div class="event-field span-3">
+        <div class="event-field span-3" id="ticketPriceField" <?= $isFreeChecked ? 'hidden' : '' ?>>
             <label class="form-label">Ticket Price</label>
-            <input type="number" step="0.01" min="0" class="form-control" name="ticket_price" value="<?= h((string) ($editEvent['ticket_price'] ?? '')) ?>">
+            <input type="number" step="0.01" min="0" class="form-control" id="ticketPriceInput" name="ticket_price" value="<?= h((string) ($editEvent['ticket_price'] ?? '')) ?>">
         </div>
 
         <div class="event-field span-3">
@@ -158,7 +159,7 @@
 
         <div class="event-field span-6 event-check">
             <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="is_free" id="is_free" <?= (int) ($editEvent['is_free'] ?? 0) === 1 ? 'checked' : '' ?>>
+                <input class="form-check-input" type="checkbox" name="is_free" id="is_free" <?= $isFreeChecked ? 'checked' : '' ?>>
                 <label class="form-check-label" for="is_free">Free Event</label>
             </div>
         </div>
@@ -208,6 +209,29 @@ document.querySelectorAll(".event-form textarea").forEach((textarea) => {
     resizeTextarea();
     textarea.addEventListener("input", resizeTextarea);
 });
+
+const freeEventCheckbox = document.getElementById("is_free");
+const ticketPriceField = document.getElementById("ticketPriceField");
+const ticketPriceInput = document.getElementById("ticketPriceInput");
+
+if (freeEventCheckbox && ticketPriceField) {
+    const syncTicketPriceVisibility = () => {
+        const isFree = freeEventCheckbox.checked;
+        ticketPriceField.hidden = isFree;
+
+        if (ticketPriceInput) {
+            if (isFree) {
+                ticketPriceInput.value = "";
+                ticketPriceInput.disabled = true;
+            } else {
+                ticketPriceInput.disabled = false;
+            }
+        }
+    };
+
+    freeEventCheckbox.addEventListener("change", syncTicketPriceVisibility);
+    syncTicketPriceVisibility();
+}
 </script>
 </div>
 <?php shell_end(); ?>
