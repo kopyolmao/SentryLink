@@ -182,42 +182,72 @@ if (! function_exists('shell_start')) {
     --font-body: "Manrope", sans-serif;
     --font-headline: "Newsreader", serif;
     --scroll-track: rgba(8, 14, 26, 0.92);
+    --scroll-track-hidden: rgba(8, 14, 26, 0);
     --scroll-thumb: rgba(159, 176, 207, 0.44);
+    --scroll-thumb-hidden: rgba(159, 176, 207, 0);
     --scroll-thumb-strong: rgba(204, 189, 255, 0.66);
 }
 body { margin: 0; background: linear-gradient(180deg, #08101d 0%, #101a2d 100%); color: var(--text); font-family: var(--font-body); }
 h1, h2, h3, h4, .brand, .heading h1 { font-family: var(--font-headline); }
-html { scrollbar-width: none; scrollbar-color: var(--scroll-thumb) var(--scroll-track); }
-*::-webkit-scrollbar { width: 0; height: 0; }
-*::-webkit-scrollbar-track { background: var(--scroll-track); }
+html { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track {
+    background: var(--scroll-track-hidden);
+    transition: background-color 220ms ease;
+}
 *::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, var(--scroll-thumb), rgba(122, 61, 255, 0.5));
+    background: var(--scroll-thumb-hidden);
     border-radius: 999px;
-    border: 2px solid var(--scroll-track);
+    border: 2px solid transparent;
+    transition: background-color 220ms ease, border-color 220ms ease;
 }
 *::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, var(--scroll-thumb-strong), rgba(122, 61, 255, 0.72));
+    background: var(--scroll-thumb-hidden);
 }
-*::-webkit-scrollbar-corner { background: var(--scroll-track); }
-html.scrollbar-active { scrollbar-width: thin; }
-html.scrollbar-active::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-corner { background: var(--scroll-track-hidden); }
+html.scrollbar-active { scrollbar-color: var(--scroll-thumb) var(--scroll-track); }
+html.scrollbar-active *::-webkit-scrollbar-track { background: var(--scroll-track); }
+html.scrollbar-active *::-webkit-scrollbar-thumb {
+    background: var(--scroll-thumb);
+    border-color: var(--scroll-track);
+}
+html.scrollbar-active *::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-strong); }
+html.scrollbar-active *::-webkit-scrollbar-corner { background: var(--scroll-track); }
 .sidebar,
 .table-wrap {
-    scrollbar-width: none;
-    scrollbar-color: var(--scroll-thumb) var(--scroll-track);
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
 }
 .sidebar:hover,
 .sidebar.scrollbar-active-local,
 .table-wrap:hover,
 .table-wrap.scrollbar-active-local {
-    scrollbar-width: thin;
+    scrollbar-color: var(--scroll-thumb) var(--scroll-track);
 }
-.sidebar:hover::-webkit-scrollbar,
-.sidebar.scrollbar-active-local::-webkit-scrollbar,
-.table-wrap:hover::-webkit-scrollbar,
-.table-wrap.scrollbar-active-local::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+.sidebar:hover::-webkit-scrollbar-track,
+.sidebar.scrollbar-active-local::-webkit-scrollbar-track,
+.table-wrap:hover::-webkit-scrollbar-track,
+.table-wrap.scrollbar-active-local::-webkit-scrollbar-track {
+    background: var(--scroll-track);
+}
+.sidebar:hover::-webkit-scrollbar-thumb,
+.sidebar.scrollbar-active-local::-webkit-scrollbar-thumb,
+.table-wrap:hover::-webkit-scrollbar-thumb,
+.table-wrap.scrollbar-active-local::-webkit-scrollbar-thumb {
+    background: var(--scroll-thumb);
+    border-color: var(--scroll-track);
+}
+.sidebar:hover::-webkit-scrollbar-thumb:hover,
+.sidebar.scrollbar-active-local::-webkit-scrollbar-thumb:hover,
+.table-wrap:hover::-webkit-scrollbar-thumb:hover,
+.table-wrap.scrollbar-active-local::-webkit-scrollbar-thumb:hover {
+    background: var(--scroll-thumb-strong);
+}
+.sidebar:hover::-webkit-scrollbar-corner,
+.sidebar.scrollbar-active-local::-webkit-scrollbar-corner,
+.table-wrap:hover::-webkit-scrollbar-corner,
+.table-wrap.scrollbar-active-local::-webkit-scrollbar-corner {
+    background: var(--scroll-track);
 }
 .app-shell { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
 .sidebar {
