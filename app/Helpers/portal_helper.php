@@ -185,7 +185,18 @@ body { margin: 0; background: linear-gradient(180deg, #08101d 0%, #101a2d 100%);
 .role-badge { display: inline-block; font-size: 12px; padding: 6px 12px; background: rgba(255,255,255,0.05); border-radius: 999px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; margin-bottom: 22px; }
 .sidebar a { display: block; color: var(--muted); text-decoration: none; padding: 11px 12px; border-radius: 12px; margin-bottom: 6px; }
 .sidebar a.active, .sidebar a:hover { background: rgba(255,255,255,0.06); color: #fff; }
-.sidebar .logout-link { margin-top: 18px; color: #ffd0d0; }
+.sidebar .logout-link {
+    margin-top: 18px;
+    color: #ff7a7a;
+    background: rgba(255, 72, 72, 0.14);
+    border: 1px solid rgba(255, 109, 109, 0.34);
+}
+.sidebar .logout-link:hover,
+.sidebar .logout-link:focus {
+    color: #ffe2e2;
+    background: rgba(255, 72, 72, 0.26);
+    border-color: rgba(255, 125, 125, 0.5);
+}
 .content { padding: 28px; }
 .topbar { display: flex; justify-content: space-between; align-items: start; gap: 16px; margin-bottom: 24px; }
 .heading h1 { margin: 0; font-size: 30px; }
