@@ -316,29 +316,24 @@ class AuthController extends BaseController
             return $data + [
                 'turnstileSiteKey'   => $siteKey,
                 'loginCaptchaMode'   => 'turnstile',
-                'localCaptchaPrompt' => '',
                 'localCaptchaToken'  => '',
+                'localCaptchaImage'  => '',
             ];
         }
 
-        $left   = random_int(1, 9);
-        $right  = random_int(1, 9);
-        $answer = (string) ($left + $right);
-        $token  = bin2hex(random_bytes(16));
-        $hash   = hash('sha256', $token . '|' . $answer);
-        $expiry = time() + 600;
+        $captcha = $this->buildLocalTextCaptcha();
 
         $this->session->set([
-            'login_captcha_token'   => $token,
-            'login_captcha_hash'    => $hash,
-            'login_captcha_expires' => $expiry,
+            'login_captcha_token'   => $captcha['token'],
+            'login_captcha_hash'    => $captcha['hash'],
+            'login_captcha_expires' => $captcha['expiry'],
         ]);
 
         return $data + [
             'turnstileSiteKey'   => '',
-            'loginCaptchaMode'   => 'local_math',
-            'localCaptchaPrompt' => $left . ' + ' . $right . ' = ?',
-            'localCaptchaToken'  => $token,
+            'loginCaptchaMode'   => 'local_image_text',
+            'localCaptchaToken'  => $captcha['token'],
+            'localCaptchaImage'  => $captcha['image'],
         ];
     }
 
@@ -371,7 +366,7 @@ class AuthController extends BaseController
             return 'Please complete the captcha challenge.';
         }
 
-        if (preg_match('/^\d{1,3}$/', $postedAnswer) !== 1) {
+        if (preg_match('/^[a-zA-Z0-9]{4,10}$/', $postedAnswer) !== 1) {
             return 'Invalid captcha answer format.';
         }
 
@@ -379,12 +374,76 @@ class AuthController extends BaseController
             return 'Captcha verification failed. Please try again.';
         }
 
-        $postedHash = hash('sha256', $postedToken . '|' . $postedAnswer);
+        $postedHash = hash('sha256', $postedToken . '|' . strtoupper($postedAnswer));
         if (! hash_equals($sessionHash, $postedHash)) {
             return 'Captcha verification failed. Please try again.';
         }
 
         return null;
+    }
+
+    /**
+     * @return array{token: string, hash: string, expiry: int, image: string}
+     */
+    private function buildLocalTextCaptcha(): array
+    {
+        $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        $text = '';
+        for ($i = 0; $i < 6; $i++) {
+            $text .= $alphabet[random_int(0, strlen($alphabet) - 1)];
+        }
+
+        $token = bin2hex(random_bytes(16));
+        $hash  = hash('sha256', $token . '|' . $text);
+        $expiry = time() + 600;
+        $image = $this->buildCaptchaSvgDataUri($text);
+
+        return [
+            'token'  => $token,
+            'hash'   => $hash,
+            'expiry' => $expiry,
+            'image'  => $image,
+        ];
+    }
+
+    private function buildCaptchaSvgDataUri(string $text): string
+    {
+        $chars = str_split($text);
+        $charNodes = '';
+        $x = 18;
+
+        foreach ($chars as $char) {
+            $y = random_int(30, 46);
+            $rotate = random_int(-20, 20);
+            $charNodes .= '<text x="' . $x . '" y="' . $y . '" transform="rotate(' . $rotate . ' ' . $x . ' ' . $y . ')"'
+                . ' font-family="monospace" font-size="28" font-weight="700" fill="#0b1020">' . $char . '</text>';
+            $x += 26;
+        }
+
+        $noise = '';
+        for ($i = 0; $i < 10; $i++) {
+            $x1 = random_int(0, 200);
+            $y1 = random_int(0, 60);
+            $x2 = random_int(0, 200);
+            $y2 = random_int(0, 60);
+            $stroke = random_int(140, 220);
+            $noise .= '<line x1="' . $x1 . '" y1="' . $y1 . '" x2="' . $x2 . '" y2="' . $y2 . '" stroke="rgb(' . $stroke . ',' . ($stroke - 30) . ',' . ($stroke - 60) . ')" stroke-width="1.2" opacity="0.55" />';
+        }
+
+        for ($i = 0; $i < 35; $i++) {
+            $cx = random_int(0, 200);
+            $cy = random_int(0, 60);
+            $r = random_int(1, 2);
+            $noise .= '<circle cx="' . $cx . '" cy="' . $cy . '" r="' . $r . '" fill="rgba(255,255,255,0.45)" />';
+        }
+
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="60" viewBox="0 0 200 60">'
+            . '<rect width="200" height="60" rx="10" fill="#d9def0" />'
+            . $noise
+            . $charNodes
+            . '</svg>';
+
+        return 'data:image/svg+xml;base64,' . base64_encode($svg);
     }
 
     private function verifyTurnstile(): ?string

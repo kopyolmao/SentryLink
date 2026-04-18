@@ -314,15 +314,18 @@ $heroSystemTitle = trim((string) ($heroTitle ?? '')) !== '' ? (string) $heroTitl
                         <div class="pt-1">
                             <div class="cf-turnstile" data-sitekey="<?= h((string) $turnstileSiteKey) ?>" data-theme="dark" data-size="flexible"></div>
                         </div>
-                    <?php elseif (($loginCaptchaMode ?? '') === 'local_math'): ?>
+                    <?php elseif (($loginCaptchaMode ?? '') === 'local_image_text'): ?>
                         <div class="space-y-2 pt-1">
                             <label class="ml-1 block text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Captcha</label>
-                            <div class="group/input relative">
-                                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-xl text-on-surface-variant/40 transition-colors group-focus-within/input:text-primary">calculate</span>
-                                <input type="hidden" name="local_captcha_token" value="<?= h((string) ($localCaptchaToken ?? '')) ?>">
-                                <input type="text" name="local_captcha_answer" class="w-full rounded-full border border-outline-variant/20 bg-surface-container-lowest/40 py-3.5 pl-12 pr-6 text-sm text-on-surface placeholder:text-on-surface-variant/30 focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/50" placeholder="<?= h((string) ($localCaptchaPrompt ?? 'Solve the captcha')) ?>" required>
+                            <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-lowest/30 p-3">
+                                <img src="<?= h((string) ($localCaptchaImage ?? '')) ?>" alt="Captcha challenge" class="h-14 w-full rounded-md object-cover">
                             </div>
-                            <p class="ml-1 text-xs text-on-surface-variant/70">Solve the math challenge to continue.</p>
+                            <div class="group/input relative">
+                                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-xl text-on-surface-variant/40 transition-colors group-focus-within/input:text-primary">shield_question</span>
+                                <input type="hidden" name="local_captcha_token" value="<?= h((string) ($localCaptchaToken ?? '')) ?>">
+                                <input type="text" name="local_captcha_answer" maxlength="10" autocomplete="off" class="w-full rounded-full border border-outline-variant/20 bg-surface-container-lowest/40 py-3.5 pl-12 pr-6 text-sm tracking-[0.18em] uppercase text-on-surface placeholder:text-on-surface-variant/30 focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/50" placeholder="Enter captcha text" required>
+                            </div>
+                            <button type="button" onclick="window.location.reload()" class="ml-1 text-xs font-semibold text-primary/80 transition-colors hover:text-primary">Refresh captcha</button>
                         </div>
                     <?php endif; ?>
 
