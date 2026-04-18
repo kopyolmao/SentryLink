@@ -234,6 +234,40 @@ class AdminController extends BaseController
 
                     $this->portal->auditLog((int) $this->user['id'], 'STUDENT_DELETED', 'user', $targetId);
                     $message = 'Student account deleted for ' . trim($student['first_name'] . ' ' . $student['last_name']) . '.';
+                } elseif ($this->request->getPost('toggle_student_access')) {
+                    $targetId = (int) ($this->request->getPost('target_id') ?? 0);
+                    if ($targetId <= 0) {
+                        throw new \RuntimeException('Select a valid student account.');
+                    }
+
+                    $student = $this->fetchOne(
+                        "SELECT id, first_name, last_name, is_active
+                         FROM users
+                         WHERE id = ? AND role = 'student' AND deleted_at IS NULL
+                         LIMIT 1",
+                        [$targetId]
+                    );
+
+                    if (! $student) {
+                        throw new \RuntimeException('Student account was not found or may already be deleted.');
+                    }
+
+                    $isCurrentlyActive = (int) ($student['is_active'] ?? 1) === 1;
+                    if ($isCurrentlyActive) {
+                        $this->execute(
+                            'UPDATE users SET is_active = 0, session_token = NULL, session_last_seen_at = NULL, updated_at = NOW() WHERE id = ?',
+                            [$targetId]
+                        );
+                        $this->portal->auditLog((int) $this->user['id'], 'STUDENT_TERMINATED', 'user', $targetId);
+                        $message = 'Student account terminated for ' . trim($student['first_name'] . ' ' . $student['last_name']) . '.';
+                    } else {
+                        $this->execute(
+                            'UPDATE users SET is_active = 1, updated_at = NOW() WHERE id = ?',
+                            [$targetId]
+                        );
+                        $this->portal->auditLog((int) $this->user['id'], 'STUDENT_REACTIVATED', 'user', $targetId);
+                        $message = 'Student account reactivated for ' . trim($student['first_name'] . ' ' . $student['last_name']) . '.';
+                    }
                 }
             } catch (\Throwable $e) {
                 $error = $e->getMessage();

@@ -196,11 +196,11 @@ $selectedCourse = old('course_select');
 <div class="panel">
     <div class="table-wrap">
         <table class="table table-dark align-middle">
-            <thead><tr><th>Student</th><th>Course / Year</th><th>Email</th><th>House</th><th>Email Verified</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Student</th><th>Course / Year</th><th>Email</th><th>House</th><th>Status</th><th>Email Verified</th><th>Actions</th></tr></thead>
             <tbody>
             <?php if ($students === []): ?>
                 <tr>
-                    <td colspan="6" class="text-secondary">No student accounts found.</td>
+                    <td colspan="7" class="text-secondary">No student accounts found.</td>
                 </tr>
             <?php else: ?>
                 <?php foreach ($students as $student): ?>
@@ -210,9 +210,22 @@ $selectedCourse = old('course_select');
                         <td><?= h(($student['course'] ?: '-') . ' / ' . ($student['year_level'] ?: '-')) ?></td>
                         <td><?= h($student['email']) ?></td>
                         <td><?= h($student['house']) ?></td>
+                        <td><span class="badge text-bg-<?= (int) $student['is_active'] === 1 ? 'success' : 'secondary' ?>"><?= (int) $student['is_active'] === 1 ? 'Active' : 'Terminated' ?></span></td>
                         <td><span class="badge text-bg-<?= (int) $student['email_verified'] === 1 ? 'success' : 'warning' ?>"><?= (int) $student['email_verified'] === 1 ? 'Verified' : 'Pending' ?></span></td>
                         <td>
                             <div class="student-table-actions">
+                                <form method="POST">
+                                    <input type="hidden" name="target_id" value="<?= h((string) $student['id']) ?>">
+                                    <button
+                                        type="submit"
+                                        class="btn btn-outline-light btn-sm"
+                                        name="toggle_student_access"
+                                        value="1"
+                                        onclick="return confirm('<?= (int) $student['is_active'] === 1 ? 'Terminate' : 'Enable' ?> this student account?')"
+                                    >
+                                        <?= (int) $student['is_active'] === 1 ? 'Terminate' : 'Enable' ?>
+                                    </button>
+                                </form>
                                 <button
                                     type="button"
                                     class="btn btn-danger btn-sm js-delete-student"
