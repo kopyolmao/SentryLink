@@ -152,12 +152,36 @@ button {
     box-shadow: 0 12px 28px color-mix(in srgb, var(--accent) 24%, transparent);
 }
 .back-link {
-    margin-top: 1rem;
+    margin-top: 1.1rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid rgba(202, 195, 217, 0.14);
 }
 .back-link a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    width: 100%;
+    min-height: 2.7rem;
+    border-radius: 999px;
+    border: 1px solid rgba(202, 195, 217, 0.26);
+    background: rgba(8, 10, 44, 0.42);
     color: #e7deff;
     text-decoration: none;
     font-weight: 600;
+    letter-spacing: 0.01em;
+    transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+.back-link a::before {
+    content: "←";
+    font-size: 0.98rem;
+    line-height: 1;
+}
+.back-link a:hover,
+.back-link a:focus {
+    border-color: color-mix(in srgb, var(--accent) 42%, white 58%);
+    background: color-mix(in srgb, var(--accent) 16%, rgba(8, 10, 44, 0.42));
+    transform: translateY(-1px);
 }
 </style>
 </head>
