@@ -61,3 +61,4 @@ Runtime files are intentionally ignored:
 - unrelated local Topless project artifacts found in the restored web root
 
 Do not commit real production credentials. Keep deployment-specific secrets in `.env` or the server environment.
+# SentryLink
