@@ -181,9 +181,44 @@ if (! function_exists('shell_start')) {
     --accent: <?= $accent ?>;
     --font-body: "Manrope", sans-serif;
     --font-headline: "Newsreader", serif;
+    --scroll-track: rgba(8, 14, 26, 0.92);
+    --scroll-thumb: rgba(159, 176, 207, 0.44);
+    --scroll-thumb-strong: rgba(204, 189, 255, 0.66);
 }
 body { margin: 0; background: linear-gradient(180deg, #08101d 0%, #101a2d 100%); color: var(--text); font-family: var(--font-body); }
 h1, h2, h3, h4, .brand, .heading h1 { font-family: var(--font-headline); }
+html { scrollbar-width: none; scrollbar-color: var(--scroll-thumb) var(--scroll-track); }
+*::-webkit-scrollbar { width: 0; height: 0; }
+*::-webkit-scrollbar-track { background: var(--scroll-track); }
+*::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--scroll-thumb), rgba(122, 61, 255, 0.5));
+    border-radius: 999px;
+    border: 2px solid var(--scroll-track);
+}
+*::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, var(--scroll-thumb-strong), rgba(122, 61, 255, 0.72));
+}
+*::-webkit-scrollbar-corner { background: var(--scroll-track); }
+html.scrollbar-active { scrollbar-width: thin; }
+html.scrollbar-active::-webkit-scrollbar { width: 10px; height: 10px; }
+.sidebar,
+.table-wrap {
+    scrollbar-width: none;
+    scrollbar-color: var(--scroll-thumb) var(--scroll-track);
+}
+.sidebar:hover,
+.sidebar.scrollbar-active-local,
+.table-wrap:hover,
+.table-wrap.scrollbar-active-local {
+    scrollbar-width: thin;
+}
+.sidebar:hover::-webkit-scrollbar,
+.sidebar.scrollbar-active-local::-webkit-scrollbar,
+.table-wrap:hover::-webkit-scrollbar,
+.table-wrap.scrollbar-active-local::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
 .app-shell { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
 .sidebar {
     background: rgba(9,15,28,0.96);
@@ -287,6 +322,46 @@ code { color: #bfd3ff; }
 if (! function_exists('shell_end')) {
     function shell_end(string $script = ''): void
     {
+        $scrollScript = <<<'HTML'
+<script>
+(() => {
+    const root = document.documentElement;
+    let rootTimer = null;
+
+    const activateRootScrollbar = () => {
+        root.classList.add("scrollbar-active");
+        clearTimeout(rootTimer);
+        rootTimer = setTimeout(() => root.classList.remove("scrollbar-active"), 700);
+    };
+
+    window.addEventListener("scroll", activateRootScrollbar, { passive: true });
+    window.addEventListener("wheel", activateRootScrollbar, { passive: true });
+    window.addEventListener("touchmove", activateRootScrollbar, { passive: true });
+
+    const bindLocalScrollbar = (el) => {
+        if (!el) {
+            return;
+        }
+
+        let localTimer = null;
+        const activateLocalScrollbar = () => {
+            el.classList.add("scrollbar-active-local");
+            clearTimeout(localTimer);
+            localTimer = setTimeout(() => el.classList.remove("scrollbar-active-local"), 700);
+        };
+
+        el.addEventListener("scroll", activateLocalScrollbar, { passive: true });
+        el.addEventListener("wheel", activateLocalScrollbar, { passive: true });
+        el.addEventListener("touchmove", activateLocalScrollbar, { passive: true });
+    };
+
+    bindLocalScrollbar(document.querySelector(".sidebar"));
+    document.querySelectorAll(".table-wrap").forEach(bindLocalScrollbar);
+})();
+</script>
+HTML;
+
+        echo $scrollScript;
         echo $script;
         ?>
     </main>
