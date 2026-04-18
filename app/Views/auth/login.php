@@ -217,6 +217,22 @@ h1, h2, .headline {
     color: #f5f0ff;
 }
 
+.captcha-image-wrap {
+    border-radius: 0.75rem;
+    background: #d9def0;
+    min-height: 4.5rem;
+    display: grid;
+    place-items: center;
+}
+
+.captcha-image {
+    width: 100%;
+    height: 4.5rem;
+    object-fit: contain;
+    image-rendering: crisp-edges;
+    border-radius: 0.5rem;
+}
+
 @media (max-width: 1023px) {
     .auth-panel {
         padding-top: 4.5rem;
@@ -413,7 +429,9 @@ $heroSystemTitle = trim((string) ($heroTitle ?? '')) !== '' ? (string) $heroTitl
                 <?php elseif (($loginCaptchaMode ?? '') === 'local_image_text'): ?>
                     <div class="space-y-2">
                         <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-lowest/30 p-3">
-                            <img src="<?= h((string) ($localCaptchaImage ?? '')) ?>" alt="Captcha challenge" class="h-14 w-full rounded-md object-cover">
+                            <div class="captcha-image-wrap">
+                                <img src="<?= h((string) ($localCaptchaImage ?? '')) ?>" alt="Captcha challenge" class="captcha-image">
+                            </div>
                         </div>
                         <div class="group/input relative">
                             <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-xl text-on-surface-variant/40 transition-colors group-focus-within/input:text-primary">shield_question</span>
