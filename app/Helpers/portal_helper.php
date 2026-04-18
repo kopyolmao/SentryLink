@@ -151,6 +151,14 @@ if (! function_exists('shell_start')) {
             'director' => app_url('director/auth/logout'),
             default    => app_url('logout'),
         };
+        $userPhotoPath = trim((string) ($user['profile_photo'] ?? ''));
+        $userPhotoUrl = '';
+        if ($userPhotoPath !== '') {
+            $userPhotoUrl = preg_match('/^https?:\/\//i', $userPhotoPath) === 1
+                ? $userPhotoPath
+                : app_url(ltrim($userPhotoPath, '/'));
+        }
+        $userInitial = strtoupper(substr(trim((string) ($user['first_name'] ?? shell_role_label($role))), 0, 1));
         ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -182,8 +190,12 @@ body { margin: 0; background: linear-gradient(180deg, #08101d 0%, #101a2d 100%);
 .topbar { display: flex; justify-content: space-between; align-items: start; gap: 16px; margin-bottom: 24px; }
 .heading h1 { margin: 0; font-size: 30px; }
 .heading p { margin: 6px 0 0; color: var(--muted); }
-.user-card { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; min-width: 220px; }
+.user-card { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; min-width: 220px; display: flex; gap: 12px; align-items: center; }
 .user-card small { display: block; color: var(--muted); }
+.user-card-body { min-width: 0; }
+.user-avatar, .user-avatar-fallback { width: 46px; height: 46px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.16); flex-shrink: 0; }
+.user-avatar { object-fit: cover; }
+.user-avatar-fallback { display: grid; place-items: center; font-weight: 700; background: rgba(255,255,255,0.08); color: #fff; }
 .panel { background: rgba(15,22,38,0.92); border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 20px; }
 .metric { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 18px; padding: 18px; height: 100%; }
 .metric .value { font-size: 32px; font-weight: 800; margin-top: 6px; }
@@ -222,9 +234,16 @@ code { color: #bfd3ff; }
                 <?php endif; ?>
             </div>
             <div class="user-card">
-                <div><?= h(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))) ?></div>
-                <small><?= h($user['email'] ?? '') ?></small>
-                <small><?= h($user['student_id'] ?? shell_role_label($role)) ?></small>
+                <?php if ($userPhotoUrl !== ''): ?>
+                    <img class="user-avatar" src="<?= h($userPhotoUrl) ?>" alt="User photo">
+                <?php else: ?>
+                    <div class="user-avatar-fallback" aria-hidden="true"><?= h($userInitial !== '' ? $userInitial : 'U') ?></div>
+                <?php endif; ?>
+                <div class="user-card-body">
+                    <div><?= h(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))) ?></div>
+                    <small><?= h($user['email'] ?? '') ?></small>
+                    <small><?= h($user['student_id'] ?? shell_role_label($role)) ?></small>
+                </div>
             </div>
         </div>
         <?php

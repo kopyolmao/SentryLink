@@ -1,4 +1,14 @@
 <?php shell_start('SentryLink | Account', $user, 'student', 'account', 'Account', 'Keep your student details current for gate validation and reports.'); ?>
+<?php
+$profilePhotoPath = trim((string) ($user['profile_photo'] ?? ''));
+$profilePhotoUrl = '';
+if ($profilePhotoPath !== '') {
+    $profilePhotoUrl = preg_match('/^https?:\/\//i', $profilePhotoPath) === 1
+        ? $profilePhotoPath
+        : app_url(ltrim($profilePhotoPath, '/'));
+}
+$profileInitial = strtoupper(substr(trim((string) ($user['first_name'] ?? 'S')), 0, 1));
+?>
 <style>
 .profile-panel {
     display: flex;
@@ -19,6 +29,39 @@
 
 .profile-field input {
     width: 100%;
+}
+
+.profile-media {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.profile-avatar,
+.profile-avatar-fallback {
+    width: 92px;
+    height: 92px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    flex-shrink: 0;
+}
+
+.profile-avatar {
+    object-fit: cover;
+}
+
+.profile-avatar-fallback {
+    display: grid;
+    place-items: center;
+    font-size: 1.8rem;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--muted);
+}
+
+.profile-media-copy {
+    flex: 1 1 260px;
 }
 
 .profile-copy {
@@ -67,8 +110,24 @@
 </style>
 <div class="panel profile-panel">
     <?php if ($message !== ''): ?><div class="alert alert-success"><?= h($message) ?></div><?php endif; ?>
+    <?php if (($error ?? '') !== ''): ?><div class="alert alert-danger"><?= h((string) $error) ?></div><?php endif; ?>
     <div class="profile-copy">Student ID and bound email are controlled by the system and cannot be edited here.</div>
-    <form method="POST" class="profile-form">
+    <form method="POST" enctype="multipart/form-data" class="profile-form">
+        <div class="profile-field span-12">
+            <div class="profile-media">
+                <?php if ($profilePhotoUrl !== ''): ?>
+                    <img class="profile-avatar" src="<?= h($profilePhotoUrl) ?>" alt="Profile photo">
+                <?php else: ?>
+                    <div class="profile-avatar-fallback" aria-hidden="true"><?= h($profileInitial !== '' ? $profileInitial : 'S') ?></div>
+                <?php endif; ?>
+                <div class="profile-media-copy">
+                    <label class="form-label" for="profile_photo">Profile Photo</label>
+                    <input class="form-control" id="profile_photo" type="file" name="profile_photo" accept="image/jpeg,image/png,image/webp">
+                    <small class="text-secondary">JPG, PNG, or WEBP. Max file size: 2MB.</small>
+                </div>
+            </div>
+        </div>
+
         <div class="profile-field span-6">
             <label class="form-label">First Name</label>
             <input class="form-control" name="first_name" value="<?= h($user['first_name']) ?>" required>

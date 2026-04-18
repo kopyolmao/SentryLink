@@ -119,24 +119,85 @@ class StudentController extends BaseController
     public function profile(): string
     {
         $message = '';
+        $error   = '';
 
         if ($this->request->getMethod() === 'POST') {
-            $firstName = trim((string) $this->request->getPost('first_name'));
-            $lastName  = trim((string) $this->request->getPost('last_name'));
-            $course    = trim((string) $this->request->getPost('course'));
-            $yearLevel = trim((string) $this->request->getPost('year_level'));
-            $house     = trim((string) $this->request->getPost('house'));
+            try {
+                $firstName = trim((string) $this->request->getPost('first_name'));
+                $lastName  = trim((string) $this->request->getPost('last_name'));
+                $course    = trim((string) $this->request->getPost('course'));
+                $yearLevel = trim((string) $this->request->getPost('year_level'));
+                $house     = trim((string) $this->request->getPost('house'));
+                $profilePhotoPath = null;
+                $photoUploaded = false;
 
-            $this->execute(
-                'UPDATE users SET first_name = ?, last_name = ?, course = ?, year_level = ?, house = ?, updated_at = NOW() WHERE id = ?',
-                [$firstName, $lastName, $course, $yearLevel, $house, (int) $this->user['id']]
-            );
-            $this->portal->auditLog((int) $this->user['id'], 'PROFILE_UPDATED', 'user', (int) $this->user['id']);
-            $this->user = $this->fetchOne('SELECT * FROM users WHERE id = ? LIMIT 1', [(int) $this->user['id']]);
-            $message    = 'Profile updated.';
+                $profilePhoto = $this->request->getFile('profile_photo');
+                if ($profilePhoto && $profilePhoto->isValid() && ! $profilePhoto->hasMoved()) {
+                    $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+                    $detectedMimeType = strtolower((string) $profilePhoto->getMimeType());
+
+                    if (! in_array($detectedMimeType, $allowedMimeTypes, true)) {
+                        throw new \RuntimeException('Profile photo must be a JPG, PNG, or WEBP image.');
+                    }
+
+                    if ((float) $profilePhoto->getSizeByUnit('mb') > 2.0) {
+                        throw new \RuntimeException('Profile photo must be 2MB or smaller.');
+                    }
+
+                    $uploadDirectory = rtrim(FCPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'profile_photos';
+                    if (! is_dir($uploadDirectory) && ! mkdir($uploadDirectory, 0775, true) && ! is_dir($uploadDirectory)) {
+                        throw new \RuntimeException('Unable to create profile photo upload directory.');
+                    }
+
+                    $profilePhotoName = $profilePhoto->getRandomName();
+                    $profilePhoto->move($uploadDirectory, $profilePhotoName, true);
+                    $profilePhotoPath = 'uploads/profile_photos/' . $profilePhotoName;
+                    $photoUploaded = true;
+
+                    $existingPhotoPath = trim((string) ($this->user['profile_photo'] ?? ''));
+                    if ($existingPhotoPath !== '' && preg_match('/^https?:\/\//i', $existingPhotoPath) !== 1) {
+                        $uploadsRoot = realpath($uploadDirectory);
+                        $existingAbsolutePath = realpath(rtrim(FCPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . ltrim($existingPhotoPath, '/'));
+
+                        if (
+                            $uploadsRoot !== false
+                            && $existingAbsolutePath !== false
+                            && is_file($existingAbsolutePath)
+                            && str_starts_with($existingAbsolutePath, $uploadsRoot . DIRECTORY_SEPARATOR)
+                        ) {
+                            @unlink($existingAbsolutePath);
+                        }
+                    }
+                } elseif ($profilePhoto && ! $profilePhoto->isValid() && $profilePhoto->getError() !== UPLOAD_ERR_NO_FILE) {
+                    throw new \RuntimeException($profilePhoto->getErrorString());
+                }
+
+                if ($profilePhotoPath !== null) {
+                    $this->execute(
+                        'UPDATE users SET first_name = ?, last_name = ?, course = ?, year_level = ?, house = ?, profile_photo = ?, updated_at = NOW() WHERE id = ?',
+                        [$firstName, $lastName, $course, $yearLevel, $house, $profilePhotoPath, (int) $this->user['id']]
+                    );
+                } else {
+                    $this->execute(
+                        'UPDATE users SET first_name = ?, last_name = ?, course = ?, year_level = ?, house = ?, updated_at = NOW() WHERE id = ?',
+                        [$firstName, $lastName, $course, $yearLevel, $house, (int) $this->user['id']]
+                    );
+                }
+
+                $this->portal->auditLog(
+                    (int) $this->user['id'],
+                    $photoUploaded ? 'PROFILE_UPDATED_WITH_PHOTO' : 'PROFILE_UPDATED',
+                    'user',
+                    (int) $this->user['id']
+                );
+                $this->user = $this->fetchOne('SELECT * FROM users WHERE id = ? LIMIT 1', [(int) $this->user['id']]);
+                $message    = $photoUploaded ? 'Profile and photo updated.' : 'Profile updated.';
+            } catch (\Throwable $e) {
+                $error = $e->getMessage() !== '' ? $e->getMessage() : 'Unable to update profile.';
+            }
         }
 
-        return view('student/profile', ['message' => $message, 'user' => $this->user]);
+        return view('student/profile', ['message' => $message, 'error' => $error, 'user' => $this->user]);
     }
 
     public function account(): string
