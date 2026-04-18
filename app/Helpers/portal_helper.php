@@ -204,6 +204,13 @@ body { margin: 0; background: linear-gradient(180deg, #08101d 0%, #101a2d 100%);
 .btn-primary { background: var(--accent); border-color: var(--accent); }
 .btn-outline-light { border-color: var(--border); color: var(--text); }
 .form-control, .form-select, .form-control:focus, .form-select:focus { background: #0d1527; color: #fff; border-color: #2b3959; }
+.form-control:disabled, .form-control[readonly], .form-select:disabled {
+    background: #121a2d;
+    color: #cfd8ee;
+    -webkit-text-fill-color: #cfd8ee;
+    border-color: #2b3959;
+    opacity: 1;
+}
 .form-check-input { background-color: #0d1527; border-color: #2b3959; }
 .list-soft { list-style: none; padding: 0; margin: 0; }
 .list-soft li { padding: 12px 0; border-bottom: 1px solid var(--border); }
