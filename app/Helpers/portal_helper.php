@@ -185,7 +185,17 @@ if (! function_exists('shell_start')) {
 body { margin: 0; background: linear-gradient(180deg, #08101d 0%, #101a2d 100%); color: var(--text); font-family: var(--font-body); }
 h1, h2, h3, h4, .brand, .heading h1 { font-family: var(--font-headline); }
 .app-shell { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
-.sidebar { background: rgba(9,15,28,0.96); border-right: 1px solid var(--border); padding: 24px 16px; position: sticky; top: 0; height: 100vh; }
+.sidebar {
+    background: rgba(9,15,28,0.96);
+    border-right: 1px solid var(--border);
+    padding: 24px 16px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+}
 .brand { font-size: 28px; font-weight: 800; margin-bottom: 18px; }
 .brand span { color: var(--accent); }
 .role-badge { display: inline-block; font-size: 12px; padding: 6px 12px; background: rgba(255,255,255,0.05); border-radius: 999px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; margin-bottom: 22px; }
@@ -235,7 +245,7 @@ h1, h2, h3, h4, .brand, .heading h1 { font-family: var(--font-headline); }
 code { color: #bfd3ff; }
 @media (max-width: 992px) {
     .app-shell { grid-template-columns: 1fr; }
-    .sidebar { position: relative; height: auto; }
+    .sidebar { position: relative; height: auto; overflow-y: visible; }
 }
 </style>
 </head>
