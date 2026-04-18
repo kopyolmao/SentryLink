@@ -6,6 +6,9 @@
     <meta name="description" content="The small framework with powerful features">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" type="image/png" href="/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Manrope:wght@200..800&display=swap" rel="stylesheet">
 
     <!-- STYLES -->
 
@@ -19,13 +22,16 @@
         }
         html, body {
             color: rgba(33, 37, 41, 1);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+            font-family: "Manrope", sans-serif;
             font-size: 16px;
             margin: 0;
             padding: 0;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             text-rendering: optimizeLegibility;
+        }
+        h1, h2, h3, h4 {
+            font-family: "Newsreader", serif;
         }
         header {
             background-color: rgba(247, 248, 249, 1);

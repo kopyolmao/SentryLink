@@ -3,6 +3,9 @@
 <head>
     <meta charset="utf-8">
     <title><?= lang('Errors.badRequest') ?></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Manrope:wght@200..800&display=swap" rel="stylesheet">
 
     <style>
         div.logo {
@@ -18,11 +21,12 @@
         body {
             height: 100%;
             background: #fafafa;
-            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-family: "Manrope", sans-serif;
             color: #777;
             font-weight: 300;
         }
         h1 {
+            font-family: "Newsreader", serif;
             font-weight: lighter;
             letter-spacing: normal;
             font-size: 3rem;

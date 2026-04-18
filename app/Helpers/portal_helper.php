@@ -167,6 +167,9 @@ if (! function_exists('shell_start')) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?= h($title) ?></title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Manrope:wght@200..800&display=swap" rel="stylesheet">
 <style>
 :root {
     --bg: #0a1020;
@@ -176,8 +179,11 @@ if (! function_exists('shell_start')) {
     --text: #edf3ff;
     --muted: #9fb0cf;
     --accent: <?= $accent ?>;
+    --font-body: "Manrope", sans-serif;
+    --font-headline: "Newsreader", serif;
 }
-body { margin: 0; background: linear-gradient(180deg, #08101d 0%, #101a2d 100%); color: var(--text); font-family: Arial, Helvetica, sans-serif; }
+body { margin: 0; background: linear-gradient(180deg, #08101d 0%, #101a2d 100%); color: var(--text); font-family: var(--font-body); }
+h1, h2, h3, h4, .brand, .heading h1 { font-family: var(--font-headline); }
 .app-shell { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
 .sidebar { background: rgba(9,15,28,0.96); border-right: 1px solid var(--border); padding: 24px 16px; position: sticky; top: 0; height: 100vh; }
 .brand { font-size: 28px; font-weight: 800; margin-bottom: 18px; }
