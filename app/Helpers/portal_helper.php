@@ -170,6 +170,7 @@ if (! function_exists('shell_start')) {
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Manrope:wght@200..800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 <style>
 :root {
     --bg: #0a1020;
@@ -304,6 +305,37 @@ html.scrollbar-active *::-webkit-scrollbar-corner { background: var(--scroll-tra
     opacity: 1;
 }
 .form-check-input { background-color: #0d1527; border-color: #2b3959; }
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    line-height: 1;
+}
+.password-field {
+    position: relative;
+}
+.password-field .js-password-input {
+    padding-right: 2.9rem;
+}
+.password-toggle {
+    position: absolute;
+    right: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 0;
+    background: transparent;
+    color: rgba(202, 195, 217, 0.45);
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 140ms ease;
+}
+.password-toggle:hover,
+.password-toggle:focus {
+    color: var(--accent);
+}
+.password-toggle .js-password-icon {
+    font-size: 1.25rem;
+}
 .list-soft { list-style: none; padding: 0; margin: 0; }
 .list-soft li { padding: 12px 0; border-bottom: 1px solid var(--border); }
 .list-soft li:last-child { border-bottom: none; }

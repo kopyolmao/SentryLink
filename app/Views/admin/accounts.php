@@ -100,7 +100,7 @@
             <div class="password-field">
                 <input class="form-control js-password-input" type="password" name="password" value="<?= h(old('password') !== '' ? old('password') : 'Password123!') ?>" required>
                 <button type="button" class="password-toggle js-password-toggle" aria-label="Show password" aria-pressed="false">
-                    <span aria-hidden="true">&#128065;</span>
+                    <span class="material-symbols-outlined js-password-icon" aria-hidden="true">visibility</span>
                 </button>
             </div>
         </div>
@@ -151,13 +151,13 @@ document.querySelectorAll(".js-password-toggle").forEach((button) => {
     }
 
     button.addEventListener("click", () => {
-        const show = input.type === "password";
-        input.type = show ? "text" : "password";
-        button.setAttribute("aria-pressed", show ? "true" : "false");
-        button.setAttribute("aria-label", show ? "Hide password" : "Show password");
-        const icon = button.querySelector("span");
+        const isVisible = input.type === "text";
+        input.type = isVisible ? "password" : "text";
+        button.setAttribute("aria-pressed", isVisible ? "false" : "true");
+        button.setAttribute("aria-label", isVisible ? "Show password" : "Hide password");
+        const icon = button.querySelector(".js-password-icon");
         if (icon) {
-            icon.textContent = show ? "Hide" : "Show";
+            icon.textContent = isVisible ? "visibility" : "visibility_off";
         }
     });
 });
