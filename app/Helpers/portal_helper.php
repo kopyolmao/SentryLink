@@ -166,6 +166,7 @@ if (! function_exists('shell_start')) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?= h($title) ?></title>
+<script>document.documentElement.classList.add('page-loading');</script>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -190,6 +191,48 @@ if (! function_exists('shell_start')) {
 }
 body { margin: 0; background: linear-gradient(180deg, #08101d 0%, #101a2d 100%); color: var(--text); font-family: var(--font-body); }
 h1, h2, h3, h4, .brand, .heading h1 { font-family: var(--font-headline); }
+.initial-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 2600;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(180deg, #08101d 0%, #101a2d 100%);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 220ms ease, visibility 220ms ease;
+}
+.initial-loader-card {
+    width: min(92vw, 560px);
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(15,22,38,0.92);
+    padding: 1rem;
+}
+.initial-loader-row {
+    height: 12px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.07), rgba(255,255,255,0.2), rgba(255,255,255,0.07));
+    background-size: 200% 100%;
+    animation: loaderPulse 1.2s linear infinite;
+}
+.initial-loader-row + .initial-loader-row {
+    margin-top: 0.7rem;
+}
+.initial-loader-row.w-80 { width: 80%; }
+.initial-loader-row.w-60 { width: 60%; }
+.initial-loader-row.w-40 { width: 40%; }
+@keyframes loaderPulse {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+html.page-loading .initial-loader {
+    opacity: 1;
+    visibility: visible;
+}
+html.page-loading .app-shell {
+    visibility: hidden;
+}
 html { scrollbar-width: thin; scrollbar-color: transparent transparent; }
 *::-webkit-scrollbar { width: 10px; height: 10px; }
 *::-webkit-scrollbar-track {
@@ -347,6 +390,14 @@ code { color: #bfd3ff; }
 </style>
 </head>
 <body>
+<div class="initial-loader" id="initialPageLoader" aria-hidden="true">
+    <div class="initial-loader-card">
+        <div class="initial-loader-row w-40"></div>
+        <div class="initial-loader-row w-80"></div>
+        <div class="initial-loader-row w-60"></div>
+        <div class="initial-loader-row w-80"></div>
+    </div>
+</div>
 <div class="app-shell">
     <aside class="sidebar">
         <div class="brand">Sentry<span>Link</span></div>
@@ -384,6 +435,29 @@ code { color: #bfd3ff; }
 if (! function_exists('shell_end')) {
     function shell_end(string $script = ''): void
     {
+        $loaderScript = <<<'HTML'
+<script>
+(() => {
+    const finishInitialLoader = () => {
+        document.documentElement.classList.remove("page-loading");
+        const loader = document.getElementById("initialPageLoader");
+        if (loader) {
+            loader.setAttribute("aria-hidden", "true");
+            setTimeout(() => loader.remove(), 260);
+        }
+    };
+
+    if (document.readyState === "complete") {
+        finishInitialLoader();
+        return;
+    }
+
+    window.addEventListener("load", finishInitialLoader, { once: true });
+    setTimeout(finishInitialLoader, 4500);
+})();
+</script>
+HTML;
+
         $scrollScript = <<<'HTML'
 <script>
 (() => {
@@ -423,6 +497,7 @@ if (! function_exists('shell_end')) {
 </script>
 HTML;
 
+        echo $loaderScript;
         echo $scrollScript;
         echo $script;
         ?>

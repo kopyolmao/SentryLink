@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SentryLink | Email Setup</title>
+<script>document.documentElement.classList.add('page-loading');</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Manrope:wght@200..800&display=swap" rel="stylesheet">
@@ -16,6 +17,48 @@
     --border: rgba(202, 195, 217, 0.12);
     --text: #e0e0ff;
     --muted: #cac3d9;
+}
+.page-load-skeleton {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    display: grid;
+    place-items: center;
+    background: #0d0f31;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 220ms ease, visibility 220ms ease;
+}
+.page-load-skeleton-card {
+    width: min(90vw, 32rem);
+    border-radius: 1.5rem;
+    border: 1px solid rgba(202, 195, 217, 0.14);
+    background: rgba(22, 24, 58, 0.9);
+    padding: 1rem;
+}
+.page-load-skeleton-line {
+    height: 11px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(224,224,255,0.08), rgba(224,224,255,0.24), rgba(224,224,255,0.08));
+    background-size: 200% 100%;
+    animation: loadSweep 1.2s linear infinite;
+}
+.page-load-skeleton-line + .page-load-skeleton-line {
+    margin-top: 0.65rem;
+}
+.page-load-skeleton-line.w-80 { width: 80%; }
+.page-load-skeleton-line.w-60 { width: 60%; }
+.page-load-skeleton-line.w-40 { width: 40%; }
+@keyframes loadSweep {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+html.page-loading .page-load-skeleton {
+    opacity: 1;
+    visibility: visible;
+}
+html.page-loading .auth-wrap {
+    visibility: hidden;
 }
 html, body {
     height: 100%;
@@ -160,6 +203,14 @@ button {
 </style>
 </head>
 <body>
+<div class="page-load-skeleton" id="pageLoadSkeleton" aria-hidden="true">
+    <div class="page-load-skeleton-card">
+        <div class="page-load-skeleton-line w-40"></div>
+        <div class="page-load-skeleton-line w-80"></div>
+        <div class="page-load-skeleton-line w-60"></div>
+        <div class="page-load-skeleton-line w-80"></div>
+    </div>
+</div>
 <div class="auth-wrap">
     <div class="auth-card">
         <div class="brand">SentryLink</div>
@@ -195,5 +246,24 @@ button {
         <?php endif; ?>
     </div>
 </div>
+<script>
+(() => {
+    const finishInitialLoader = () => {
+        document.documentElement.classList.remove("page-loading");
+        const loader = document.getElementById("pageLoadSkeleton");
+        if (loader) {
+            loader.setAttribute("aria-hidden", "true");
+            setTimeout(() => loader.remove(), 260);
+        }
+    };
+
+    if (document.readyState === "complete") {
+        finishInitialLoader();
+    } else {
+        window.addEventListener("load", finishInitialLoader, { once: true });
+        setTimeout(finishInitialLoader, 4500);
+    }
+})();
+</script>
 </body>
 </html>

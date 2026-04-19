@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?= h($title) ?></title>
+<script>document.documentElement.classList.add('page-loading');</script>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -78,6 +79,56 @@ body {
 
 h1, h2, .headline {
     font-family: "Newsreader", serif;
+}
+
+.page-load-skeleton {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    display: grid;
+    place-items: center;
+    background: #0d0f31;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 220ms ease, visibility 220ms ease;
+}
+
+.page-load-skeleton-card {
+    width: min(90vw, 28rem);
+    border-radius: 1.4rem;
+    border: 1px solid rgba(148, 142, 162, 0.25);
+    background: rgba(13, 15, 49, 0.96);
+    padding: 1rem;
+}
+
+.page-load-skeleton-line {
+    height: 12px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(224,224,255,0.08), rgba(224,224,255,0.24), rgba(224,224,255,0.08));
+    background-size: 200% 100%;
+    animation: loadSweep 1.2s linear infinite;
+}
+
+.page-load-skeleton-line + .page-load-skeleton-line {
+    margin-top: 0.7rem;
+}
+
+.page-load-skeleton-line.w-80 { width: 80%; }
+.page-load-skeleton-line.w-60 { width: 60%; }
+.page-load-skeleton-line.w-40 { width: 40%; }
+
+@keyframes loadSweep {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+html.page-loading .page-load-skeleton {
+    opacity: 1;
+    visibility: visible;
+}
+
+html.page-loading .viewport-shell {
+    visibility: hidden;
 }
 
 .blueprint-grid {
@@ -269,6 +320,14 @@ h1, h2, .headline {
 </style>
 </head>
 <body class="bg-background text-on-background selection:bg-primary-container selection:text-primary-fixed">
+<div class="page-load-skeleton" id="pageLoadSkeleton" aria-hidden="true">
+    <div class="page-load-skeleton-card">
+        <div class="page-load-skeleton-line w-40"></div>
+        <div class="page-load-skeleton-line w-80"></div>
+        <div class="page-load-skeleton-line w-60"></div>
+        <div class="page-load-skeleton-line w-80"></div>
+    </div>
+</div>
 <?php
 $normalizedPortal = strtolower((string) $portalLabel);
 $headline = match ($normalizedPortal) {
@@ -457,6 +516,24 @@ $heroSystemTitle = trim((string) ($heroTitle ?? '')) !== '' ? (string) $heroTitl
 <div class="pointer-events-none fixed right-0 top-0 -z-10 h-1/3 w-1/3 bg-primary/5 blur-[150px]"></div>
 <div class="pointer-events-none fixed bottom-0 left-0 -z-10 h-1/4 w-1/4 bg-primary-container/10 blur-[150px]"></div>
 <script>
+(() => {
+    const finishInitialLoader = () => {
+        document.documentElement.classList.remove("page-loading");
+        const loader = document.getElementById("pageLoadSkeleton");
+        if (loader) {
+            loader.setAttribute("aria-hidden", "true");
+            setTimeout(() => loader.remove(), 260);
+        }
+    };
+
+    if (document.readyState === "complete") {
+        finishInitialLoader();
+    } else {
+        window.addEventListener("load", finishInitialLoader, { once: true });
+        setTimeout(finishInitialLoader, 4500);
+    }
+})();
+
 document.querySelectorAll(".js-password-toggle").forEach((toggle) => {
     toggle.addEventListener("click", () => {
         const input = toggle.parentElement.querySelector(".js-password-input");
