@@ -545,6 +545,26 @@ class AdminController extends BaseController
 
     public function auditLogs(): string
     {
+        $message = '';
+        $error   = '';
+
+        if ($this->request->getMethod() === 'POST' && $this->request->getPost('clear_audit_logs')) {
+            try {
+                $this->db->transBegin();
+
+                $this->execute('DELETE FROM audit_logs');
+                // Keep a single accountability record that logs were cleared.
+                $this->portal->auditLog((int) $this->user['id'], 'AUDIT_LOGS_CLEARED', 'audit_logs', null);
+
+                $this->db->transCommit();
+                $message = 'Audit logs were cleared.';
+            } catch (\Throwable $e) {
+                $this->db->transRollback();
+                $error = 'Unable to clear audit logs right now.';
+                log_message('error', 'Failed to clear audit logs: {message}', ['message' => $e->getMessage()]);
+            }
+        }
+
         $logs = $this->fetchAll(
             "SELECT a.action, a.target_type, a.target_id, a.ip_address, a.created_at, u.first_name, u.last_name
              FROM audit_logs a
@@ -553,7 +573,7 @@ class AdminController extends BaseController
              LIMIT 200"
         );
 
-        return view('admin/audit_logs', compact('logs') + ['user' => $this->user]);
+        return view('admin/audit_logs', compact('logs', 'message', 'error') + ['user' => $this->user]);
     }
 
     public function accounts(): string

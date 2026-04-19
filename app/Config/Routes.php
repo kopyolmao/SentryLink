@@ -77,7 +77,7 @@ $routes->group('admin', static function ($routes): void {
     $routes->get('admissions', 'AdminController::admissions', ['filter' => 'role:admin']);
     $routes->match(['GET', 'POST'], 'notifications/broadcast', 'AdminController::broadcast', ['filter' => 'role:admin']);
     $routes->get('reports', 'AdminController::reports', ['filter' => 'role:admin']);
-    $routes->get('audit-logs', 'AdminController::auditLogs', ['filter' => 'role:admin']);
+    $routes->match(['GET', 'POST'], 'audit-logs', 'AdminController::auditLogs', ['filter' => 'role:admin']);
     $routes->match(['GET', 'POST'], 'admins', 'AdminController::accounts', ['filter' => 'role:admin']);
     $routes->match(['GET', 'POST'], 'settings', 'AdminController::settings', ['filter' => 'role:admin']);
     $routes->match(['GET', 'POST'], 'tickets/import-receipts', 'AdminController::importReceipts', ['filter' => 'role:admin']);
