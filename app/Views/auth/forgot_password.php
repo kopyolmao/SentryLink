@@ -173,7 +173,9 @@ button {
     transition: color 160ms ease, border-color 160ms ease;
 }
 .back-link a .material-symbols-outlined {
+    display: block;
     font-size: 1rem;
+    transform: translateY(1px);
     transition: transform 160ms ease;
 }
 .back-link a:hover,
@@ -183,7 +185,7 @@ button {
 }
 .back-link a:hover .material-symbols-outlined,
 .back-link a:focus .material-symbols-outlined {
-    transform: translateX(-2px);
+    transform: translate(-2px, 1px);
 }
 </style>
 </head>
