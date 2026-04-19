@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Manrope:wght@200..800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 <style>
 :root {
     --accent: <?= h($roleConfig[$role]['accent']) ?>;
@@ -16,6 +17,10 @@
     --border: rgba(202, 195, 217, 0.12);
     --text: #e0e0ff;
     --muted: #cac3d9;
+}
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    line-height: 1;
 }
 html, body {
     height: 100%;
@@ -167,15 +172,18 @@ button {
     border-bottom: 1px solid transparent;
     transition: color 160ms ease, border-color 160ms ease;
 }
-.back-link a::before {
-    content: "←";
-    font-size: 0.9rem;
-    line-height: 1;
+.back-link a .material-symbols-outlined {
+    font-size: 1rem;
+    transition: transform 160ms ease;
 }
 .back-link a:hover,
 .back-link a:focus {
     color: color-mix(in srgb, var(--accent) 78%, white 22%);
     border-color: color-mix(in srgb, var(--accent) 40%, white 60%);
+}
+.back-link a:hover .material-symbols-outlined,
+.back-link a:focus .material-symbols-outlined {
+    transform: translateX(-2px);
 }
 </style>
 </head>
@@ -203,7 +211,10 @@ button {
         </form>
 
         <div class="back-link">
-            <a href="<?= h(app_url(match ($role) { 'student' => 's/auth/login', 'ssg' => 'o/auth/login', 'admin' => 'admin/auth/login', 'director' => 'director/auth/login', default => 's/auth/login', })) ?>">Back to login</a>
+            <a href="<?= h(app_url(match ($role) { 'student' => 's/auth/login', 'ssg' => 'o/auth/login', 'admin' => 'admin/auth/login', 'director' => 'director/auth/login', default => 's/auth/login', })) ?>">
+                <span class="material-symbols-outlined" aria-hidden="true">chevron_left</span>
+                <span>Back to login</span>
+            </a>
         </div>
     </div>
 </div>
