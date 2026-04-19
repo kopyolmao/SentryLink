@@ -9,6 +9,14 @@ Thumbs.db
 githubdetails
 githubdetails.pub
 githubdetails.txt
+.env.local
+.env.*.local
+secrets/
+secret/
+google-credentials*.json
+auth0-credentials*.json
+oauth-client*.json
+service-account*.json
 
 # Runtime and generated files
 writable/cache/*
