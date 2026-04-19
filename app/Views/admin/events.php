@@ -65,6 +65,64 @@
     margin: 0;
 }
 
+.event-cancel-modal[hidden] {
+    display: none !important;
+}
+
+.event-cancel-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+}
+
+.event-cancel-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 8, 24, 0.76);
+    backdrop-filter: blur(6px);
+}
+
+.event-cancel-dialog {
+    position: relative;
+    width: min(100%, 460px);
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    padding: 1.35rem;
+}
+
+.event-cancel-copy {
+    color: var(--muted);
+    margin-bottom: 1rem;
+}
+
+.event-cancel-card {
+    margin-bottom: 1rem;
+    padding: 0.95rem 1rem;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.event-cancel-card strong,
+.event-cancel-card small {
+    display: block;
+}
+
+.event-cancel-card small {
+    color: var(--muted);
+}
+
+.event-cancel-actions {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
 @media (max-width: 1100px) {
     .span-6,
     .span-4,
@@ -91,6 +149,14 @@
 
     .event-actions .btn,
     .event-table-actions .btn {
+        width: 100%;
+    }
+
+    .event-cancel-actions {
+        flex-direction: column;
+    }
+
+    .event-cancel-actions .btn {
         width: 100%;
     }
 
@@ -190,7 +256,14 @@
                             <a class="btn btn-outline-light btn-sm" href="<?= h(app_url('admin/events') . '?id=' . $event['id']) ?>">Edit</a>
                             <a class="btn btn-outline-light btn-sm" href="<?= h(app_url('admin/events/' . $event['id'] . '/activities')) ?>">Activities</a>
                             <form method="POST"><input type="hidden" name="event_id" value="<?= $event['id'] ?>"><button class="btn btn-primary btn-sm" name="prepare_gate" value="1">Start Event & Prepare Gate</button></form>
-                            <form method="POST"><input type="hidden" name="event_id" value="<?= $event['id'] ?>"><button class="btn btn-danger btn-sm" name="soft_delete_event" value="1" onclick="return confirm('Cancel this event?')">Cancel</button></form>
+                            <button
+                                type="button"
+                                class="btn btn-danger btn-sm js-cancel-event"
+                                data-event-id="<?= h((string) $event['id']) ?>"
+                                data-event-title="<?= h((string) $event['title']) ?>"
+                            >
+                                Cancel
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -198,6 +271,24 @@
             </tbody>
         </table>
 </div>
+</div>
+<div class="event-cancel-modal" id="eventCancelModal" hidden>
+    <div class="event-cancel-backdrop" data-close-event-cancel></div>
+    <div class="event-cancel-dialog" role="dialog" aria-modal="true" aria-labelledby="eventCancelTitle" aria-describedby="eventCancelDescription">
+        <h3 class="h5 mb-2" id="eventCancelTitle">Cancel event?</h3>
+        <p class="event-cancel-copy" id="eventCancelDescription">This will mark the event as cancelled and remove it from active operations.</p>
+        <div class="event-cancel-card">
+            <strong id="eventCancelName"></strong>
+            <small>Status will be set to cancelled.</small>
+        </div>
+        <form method="POST">
+            <input type="hidden" name="event_id" id="event_cancel_target_id">
+            <div class="event-cancel-actions">
+                <button type="button" class="btn btn-outline-light" id="eventCancelKeep" data-close-event-cancel>Keep Event</button>
+                <button type="submit" class="btn btn-danger" name="soft_delete_event" value="1">Cancel Event</button>
+            </div>
+        </form>
+    </div>
 </div>
 <script>
 document.querySelectorAll(".event-form textarea").forEach((textarea) => {
@@ -232,6 +323,59 @@ if (freeEventCheckbox && ticketPriceField) {
     freeEventCheckbox.addEventListener("change", syncTicketPriceVisibility);
     syncTicketPriceVisibility();
 }
+
+const eventCancelModal = document.getElementById("eventCancelModal");
+const eventCancelName = document.getElementById("eventCancelName");
+const eventCancelTargetId = document.getElementById("event_cancel_target_id");
+const eventCancelKeep = document.getElementById("eventCancelKeep");
+const eventCancelButtons = document.querySelectorAll(".js-cancel-event");
+const eventCancelCloseButtons = document.querySelectorAll("[data-close-event-cancel]");
+
+function openEventCancelModal(eventId, eventTitle) {
+    if (!eventCancelModal || !eventCancelTargetId) {
+        return;
+    }
+
+    eventCancelTargetId.value = eventId;
+    if (eventCancelName) {
+        eventCancelName.textContent = eventTitle || "Selected event";
+    }
+
+    eventCancelModal.hidden = false;
+    document.body.style.overflow = "hidden";
+}
+
+function closeEventCancelModal() {
+    if (!eventCancelModal || eventCancelModal.hidden) {
+        return;
+    }
+
+    eventCancelModal.hidden = true;
+    document.body.style.overflow = "";
+}
+
+eventCancelButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+        openEventCancelModal(
+            button.getAttribute("data-event-id") || "",
+            button.getAttribute("data-event-title") || ""
+        );
+    });
+});
+
+eventCancelCloseButtons.forEach((button) => {
+    button.addEventListener("click", closeEventCancelModal);
+});
+
+if (eventCancelKeep) {
+    eventCancelKeep.addEventListener("click", closeEventCancelModal);
+}
+
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+        closeEventCancelModal();
+    }
+});
 </script>
 </div>
 <?php shell_end(); ?>
