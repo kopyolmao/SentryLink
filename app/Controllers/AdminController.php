@@ -94,6 +94,29 @@ class AdminController extends BaseController
 
                 if ($this->request->getPost('prepare_gate')) {
                     $eventId = (int) $this->request->getPost('event_id');
+                    if ($eventId <= 0) {
+                        throw new \RuntimeException('Select a valid event.');
+                    }
+
+                    $event = $this->fetchOne(
+                        'SELECT id, event_date, end_time, status, deleted_at FROM events WHERE id = ? LIMIT 1',
+                        [$eventId]
+                    );
+
+                    if (! $event || ! empty($event['deleted_at'])) {
+                        throw new \RuntimeException('Event not found.');
+                    }
+
+                    $status = strtolower(trim((string) ($event['status'] ?? '')));
+                    if (in_array($status, ['closed', 'cancelled'], true)) {
+                        throw new \RuntimeException('Cannot prepare gate for a closed or cancelled event.');
+                    }
+
+                    if ($this->eventHasEnded((string) ($event['event_date'] ?? ''), (string) ($event['end_time'] ?? ''), $now)) {
+                        $this->execute('UPDATE events SET status = ?, updated_at = NOW() WHERE id = ? AND status != ?', ['closed', $eventId, 'cancelled']);
+                        throw new \RuntimeException('Cannot prepare gate because this event already ended.');
+                    }
+
                     $count   = $this->portal->prepareEventGate($eventId);
                     $this->portal->auditLog((int) $this->user['id'], 'EVENT_GATE_PREPARED', 'event', $eventId);
                     $message = 'Event started. Gate attendees were refreshed for ' . $count . ' students.';
@@ -102,6 +125,15 @@ class AdminController extends BaseController
                 if ($this->request->getPost('soft_delete_event')) {
                     $eventId = (int) $this->request->getPost('event_id');
                     $this->execute('UPDATE events SET deleted_at = NOW(), status = ? WHERE id = ?', ['cancelled', $eventId]);
+                    $this->execute(
+                        "UPDATE tickets
+                         SET deleted_at = NOW(),
+                             payment_status = 'cancelled',
+                             updated_at = NOW()
+                         WHERE event_id = ?
+                           AND deleted_at IS NULL",
+                        [$eventId]
+                    );
                     $this->portal->auditLog((int) $this->user['id'], 'EVENT_CANCELLED', 'event', $eventId);
                     $message = 'Event cancelled.';
                 }
@@ -258,15 +290,15 @@ class AdminController extends BaseController
                             'UPDATE users SET is_active = 0, session_token = NULL, session_last_seen_at = NULL, updated_at = NOW() WHERE id = ?',
                             [$targetId]
                         );
-                        $this->portal->auditLog((int) $this->user['id'], 'STUDENT_TERMINATED', 'user', $targetId);
-                        $message = 'Student account terminated for ' . trim($student['first_name'] . ' ' . $student['last_name']) . '.';
+                        $this->portal->auditLog((int) $this->user['id'], 'STUDENT_DEACTIVATED', 'user', $targetId);
+                        $message = 'Student account deactivated for ' . trim($student['first_name'] . ' ' . $student['last_name']) . '.';
                     } else {
                         $this->execute(
                             'UPDATE users SET is_active = 1, updated_at = NOW() WHERE id = ?',
                             [$targetId]
                         );
-                        $this->portal->auditLog((int) $this->user['id'], 'STUDENT_REACTIVATED', 'user', $targetId);
-                        $message = 'Student account reactivated for ' . trim($student['first_name'] . ' ' . $student['last_name']) . '.';
+                        $this->portal->auditLog((int) $this->user['id'], 'STUDENT_ACTIVATED', 'user', $targetId);
+                        $message = 'Student account activated for ' . trim($student['first_name'] . ' ' . $student['last_name']) . '.';
                     }
                 }
             } catch (\Throwable $e) {
@@ -320,6 +352,22 @@ class AdminController extends BaseController
                     (string) ($ticket['receipt_id'] ?? ''),
                     (string) ($ticket['issued_at'] ?? ''),
                 ];
+            }
+
+            if ($rows === []) {
+                $redirectParams = [];
+                if ($eventFilter > 0) {
+                    $redirectParams['event_id'] = (string) $eventFilter;
+                }
+                if ($statusFilter !== '') {
+                    $redirectParams['status'] = $statusFilter;
+                }
+                $redirectUrl = app_url('admin/tickets');
+                if ($redirectParams !== []) {
+                    $redirectUrl .= '?' . http_build_query($redirectParams);
+                }
+
+                return redirect()->to($redirectUrl)->with('export_error', 'No ticket data found for the selected filters.');
             }
 
             $this->portal->auditLog((int) $this->user['id'], 'CSV_EXPORT', 'tickets', $eventFilter > 0 ? $eventFilter : null);
@@ -378,6 +426,22 @@ class AdminController extends BaseController
                     trim((string) ($log['officer_first'] ?? '') . ' ' . (string) ($log['officer_last'] ?? '')),
                     (string) ($log['scanned_at'] ?? ''),
                 ];
+            }
+
+            if ($rows === []) {
+                $redirectParams = [];
+                if ($eventFilter > 0) {
+                    $redirectParams['event_id'] = (string) $eventFilter;
+                }
+                if ($statusFilter !== '') {
+                    $redirectParams['status'] = $statusFilter;
+                }
+                $redirectUrl = app_url('admin/admissions');
+                if ($redirectParams !== []) {
+                    $redirectUrl .= '?' . http_build_query($redirectParams);
+                }
+
+                return redirect()->to($redirectUrl)->with('export_error', 'No admissions data found for the selected filters.');
             }
 
             $this->portal->auditLog((int) $this->user['id'], 'CSV_EXPORT', 'admissions', $eventFilter > 0 ? $eventFilter : null);
@@ -465,6 +529,10 @@ class AdminController extends BaseController
                     (string) ((int) ($report['scan_count'] ?? 0)),
                     (string) $attendanceRate,
                 ];
+            }
+
+            if ($rows === []) {
+                return redirect()->to(app_url('admin/reports'))->with('export_error', 'No report data is available to export.');
             }
 
             $this->portal->auditLog((int) $this->user['id'], 'CSV_EXPORT', 'reports', null);

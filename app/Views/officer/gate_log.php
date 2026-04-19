@@ -3,7 +3,7 @@
     <form method="GET" class="filter-form">
         <div class="filter-field filter-span-8">
             <label class="form-label">Event</label>
-            <select class="form-select" name="event_id" onchange="this.form.submit()">
+            <select class="form-select" name="event_id" onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()">
                 <option value="">Select event</option>
                 <?php foreach ($events as $event): ?>
                     <option value="<?= $event['id'] ?>" <?= $eventId === (int) $event['id'] ? 'selected' : '' ?>><?= h($event['title']) ?> (<?= h($event['event_date']) ?>)</option>

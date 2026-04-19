@@ -152,7 +152,7 @@
     <form class="filter-form" method="GET">
         <div class="filter-field filter-span-8">
             <label class="form-label">Event Gate</label>
-            <select class="form-select" name="event_id" onchange="this.form.submit()">
+            <select class="form-select" name="event_id" onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()">
                 <option value="">Select ongoing event</option>
                 <?php foreach ($events as $event): ?>
                     <option value="<?= $event['id'] ?>" <?= $selectedEvent === (int) $event['id'] ? 'selected' : '' ?>><?= h($event['title']) ?> (<?= h($event['event_date']) ?>)</option>

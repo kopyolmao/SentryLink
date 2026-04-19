@@ -214,11 +214,21 @@ class PortalService
         $token          = bin2hex(random_bytes(32));
         $normalizedRole = $this->normalizeRole((string) ($user['role'] ?? 'student'));
         $heartbeatAt    = date('Y-m-d H:i:s');
+        $email          = strtolower(trim((string) ($user['email'] ?? '')));
 
-        $this->execute(
-            'UPDATE users SET session_token = ?, session_last_seen_at = NOW(), updated_at = NOW() WHERE id = ?',
-            [$token, (int) $user['id']]
-        );
+        if ($email !== '') {
+            $this->execute(
+                'UPDATE users
+                 SET session_token = ?, session_last_seen_at = NOW(), updated_at = NOW()
+                 WHERE email = ? AND deleted_at IS NULL',
+                [$token, $email]
+            );
+        } else {
+            $this->execute(
+                'UPDATE users SET session_token = ?, session_last_seen_at = NOW(), updated_at = NOW() WHERE id = ?',
+                [$token, (int) $user['id']]
+            );
+        }
 
         $user['role'] = $normalizedRole;
         $user['session_token'] = $token;
@@ -238,6 +248,7 @@ class PortalService
             'user_id'   => (int) $user['id'],
             'user_role' => $normalizedRole,
             'session_token' => $token,
+            'auth_email' => $email,
             'user_data' => $user,
         ]);
 
@@ -736,25 +747,26 @@ class PortalService
 
         $this->authResolved = true;
 
-        $userId       = $this->rawSessionUserId();
+        $sessionUserId = $this->rawSessionUserId();
         $sessionRole  = $this->rawSessionRole();
         $sessionToken = $this->rawSessionToken();
-
-        if ($userId === null || $sessionRole === null) {
-            $this->resolvedUser = null;
-
-            return null;
-        }
+        $sessionEmail = $this->rawSessionEmail();
+        $hasAuthState = $sessionUserId !== null
+            || $sessionRole !== null
+            || $sessionEmail !== null
+            || is_array($this->session->get('user_data'));
 
         if ($sessionToken === null || $sessionToken === '') {
-            $this->clearSessionState();
+            if ($hasAuthState) {
+                $this->clearSessionState();
+            }
 
             return null;
         }
 
         $user = $this->fetchOne(
-            'SELECT * FROM users WHERE id = ? AND deleted_at IS NULL AND is_active = 1 LIMIT 1',
-            [$userId]
+            'SELECT * FROM users WHERE session_token = ? AND deleted_at IS NULL AND is_active = 1 LIMIT 1',
+            [$sessionToken]
         );
 
         if (! $user) {
@@ -765,8 +777,21 @@ class PortalService
 
         $databaseToken = trim((string) ($user['session_token'] ?? ''));
         $databaseRole  = $this->normalizeRole((string) ($user['role'] ?? ''));
+        $databaseEmail = strtolower(trim((string) ($user['email'] ?? '')));
 
-        if ($databaseToken === '' || ! hash_equals($databaseToken, $sessionToken) || $databaseRole !== $sessionRole) {
+        if ($databaseToken === '' || ! hash_equals($databaseToken, $sessionToken)) {
+            $this->clearSessionState();
+
+            return null;
+        }
+
+        if ($sessionRole !== null && $databaseRole !== $sessionRole) {
+            $this->clearSessionState();
+
+            return null;
+        }
+
+        if ($sessionEmail !== null && $databaseEmail !== '' && $databaseEmail !== $sessionEmail) {
             $this->clearSessionState();
 
             return null;
@@ -775,7 +800,15 @@ class PortalService
         $user['role'] = $databaseRole;
         $user['session_token'] = $databaseToken;
         $user = $this->refreshSessionHeartbeat($user);
-        $this->session->set('user_data', $user);
+        $this->session->set([
+            'user'         => (int) $user['id'],
+            'role'         => $databaseRole,
+            'user_id'      => (int) $user['id'],
+            'user_role'    => $databaseRole,
+            'auth_email'   => $databaseEmail,
+            'session_token'=> $databaseToken,
+            'user_data'    => $user,
+        ]);
         $this->resolvedUser = $user;
 
         return $user;
@@ -802,18 +835,24 @@ class PortalService
         return is_string($token) && $token !== '' ? $token : null;
     }
 
+    private function rawSessionEmail(): ?string
+    {
+        $email = strtolower(trim((string) ($this->session->get('auth_email') ?? '')));
+
+        return $email !== '' ? $email : null;
+    }
+
     private function clearCurrentDatabaseSession(): void
     {
-        $userId       = $this->rawSessionUserId();
         $sessionToken = $this->rawSessionToken();
 
-        if ($userId === null || $sessionToken === null || $sessionToken === '') {
+        if ($sessionToken === null || $sessionToken === '') {
             return;
         }
 
         $this->execute(
-            'UPDATE users SET session_token = NULL, session_last_seen_at = NULL, updated_at = NOW() WHERE id = ? AND session_token = ?',
-            [$userId, $sessionToken]
+            'UPDATE users SET session_token = NULL, session_last_seen_at = NULL, updated_at = NOW() WHERE session_token = ?',
+            [$sessionToken]
         );
     }
 
@@ -845,8 +884,8 @@ class PortalService
         }
 
         $this->execute(
-            'UPDATE users SET session_last_seen_at = NOW() WHERE id = ? AND session_token = ?',
-            [(int) $user['id'], (string) $user['session_token']]
+            'UPDATE users SET session_last_seen_at = NOW() WHERE session_token = ?',
+            [(string) $user['session_token']]
         );
         $user['session_last_seen_at'] = date('Y-m-d H:i:s');
 
@@ -881,6 +920,7 @@ class PortalService
             'user_id',
             'user_role',
             'session_token',
+            'auth_email',
             'user_data',
             'pending_user_id',
             'email_setup_required',

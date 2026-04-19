@@ -15,9 +15,10 @@ class GuestFilter implements FilterInterface
     public function before(RequestInterface $request, $arguments = null)
     {
         $portal = new PortalService(db_connect(), session(), new MailerService());
-        $role   = $portal->currentRole();
+        $user   = $portal->currentUser();
 
-        if ($portal->currentUserId() && $role) {
+        if (is_array($user)) {
+            $role = $portal->currentRole() ?? 'student';
             return redirect()
                 ->to(site_url($portal->roleHome($role)))
                 ->noCache()

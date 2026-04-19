@@ -354,6 +354,33 @@ class AuthController extends BaseController
         ]);
     }
 
+    public function refreshPasswordResetCaptcha()
+    {
+        if (! is_array($this->user) || (int) ($this->user['id'] ?? 0) <= 0) {
+            return $this->response->setStatusCode(401)->setJSON([
+                'ok'      => false,
+                'message' => 'Session expired. Please sign in again.',
+            ]);
+        }
+
+        $verifiedEmail = strtolower(trim((string) ($this->user['email'] ?? '')));
+        if ((int) ($this->user['email_verified'] ?? 0) !== 1 || $verifiedEmail === '') {
+            return $this->response->setStatusCode(422)->setJSON([
+                'ok'      => false,
+                'message' => 'A verified email is required before requesting a password reset.',
+            ]);
+        }
+
+        $captcha = $this->issueAuthenticatedPasswordResetCaptcha();
+
+        return $this->response->setJSON([
+            'ok'    => true,
+            'mode'  => 'local_image_text',
+            'token' => $captcha['token'],
+            'image' => $captcha['image'],
+        ]);
+    }
+
     private function handleLogin(array $allowedRoles)
     {
         $captchaStep = strtolower(trim((string) $this->request->getPost('captcha_step')));

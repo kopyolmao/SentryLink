@@ -42,6 +42,9 @@ CREATE TABLE `activities` (
 
 --
 -- Data omitted from repository copy to avoid publishing user records or session data.
+--
+
+
 -- --------------------------------------------------------
 
 --
@@ -62,6 +65,9 @@ CREATE TABLE `admissions` (
 
 --
 -- Data omitted from repository copy to avoid publishing user records or session data.
+--
+
+
 -- --------------------------------------------------------
 
 --
@@ -81,6 +87,9 @@ CREATE TABLE `audit_logs` (
 
 --
 -- Data omitted from repository copy to avoid publishing user records or session data.
+--
+
+
 -- --------------------------------------------------------
 
 --
@@ -121,6 +130,9 @@ CREATE TABLE `events` (
 
 --
 -- Data omitted from repository copy to avoid publishing user records or session data.
+--
+
+
 -- --------------------------------------------------------
 
 --
@@ -172,6 +184,9 @@ CREATE TABLE `notifications` (
 
 --
 -- Data omitted from repository copy to avoid publishing user records or session data.
+--
+
+
 -- --------------------------------------------------------
 
 --
@@ -188,6 +203,9 @@ CREATE TABLE `qr_blacklist` (
 
 --
 -- Data omitted from repository copy to avoid publishing user records or session data.
+--
+
+
 -- --------------------------------------------------------
 
 --
@@ -211,6 +229,9 @@ CREATE TABLE `tickets` (
 
 --
 -- Data omitted from repository copy to avoid publishing user records or session data.
+--
+
+
 -- --------------------------------------------------------
 
 --
@@ -240,3 +261,235 @@ CREATE TABLE `users` (
 
 --
 -- Data omitted from repository copy to avoid publishing user records or session data.
+--
+
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `activities`
+--
+ALTER TABLE `activities`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_event_id` (`event_id`),
+  ADD KEY `idx_type` (`type`);
+
+--
+-- Indexes for table `admissions`
+--
+ALTER TABLE `admissions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_user_event` (`user_id`,`event_id`),
+  ADD KEY `idx_scanned_by` (`scanned_by`),
+  ADD KEY `idx_scanned_at` (`scanned_at`),
+  ADD KEY `idx_event_id` (`event_id`),
+  ADD KEY `ticket_id` (`ticket_id`);
+
+--
+-- Indexes for table `audit_logs`
+--
+ALTER TABLE `audit_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_user_created` (`user_id`,`created_at`),
+  ADD KEY `idx_action` (`action`),
+  ADD KEY `idx_created_at` (`created_at`);
+
+--
+-- Indexes for table `ci_sessions`
+--
+ALTER TABLE `ci_sessions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_timestamp` (`timestamp`);
+
+--
+-- Indexes for table `events`
+--
+ALTER TABLE `events`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_event_date` (`event_date`),
+  ADD KEY `idx_created_by` (`created_by`);
+
+--
+-- Indexes for table `event_attendee_cache`
+--
+ALTER TABLE `event_attendee_cache`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_event_student` (`event_id`,`student_id`),
+  ADD KEY `idx_event_id` (`event_id`),
+  ADD KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `login_attempts`
+--
+ALTER TABLE `login_attempts`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_ip_address` (`ip_address`),
+  ADD KEY `idx_identifier` (`identifier`);
+
+--
+-- Indexes for table `notifications`
+--
+ALTER TABLE `notifications`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_user_read` (`user_id`,`is_read`),
+  ADD KEY `idx_created_at` (`created_at`);
+
+--
+-- Indexes for table `qr_blacklist`
+--
+ALTER TABLE `qr_blacklist`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `token_jti` (`token_jti`),
+  ADD KEY `idx_token_jti` (`token_jti`),
+  ADD KEY `idx_user_id` (`user_id`),
+  ADD KEY `idx_event_id` (`event_id`);
+
+--
+-- Indexes for table `tickets`
+--
+ALTER TABLE `tickets`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `ticket_code` (`ticket_code`),
+  ADD UNIQUE KEY `uk_user_event` (`user_id`,`event_id`),
+  ADD UNIQUE KEY `receipt_id` (`receipt_id`),
+  ADD KEY `idx_payment_status` (`payment_status`),
+  ADD KEY `idx_receipt_id` (`receipt_id`),
+  ADD KEY `event_id` (`event_id`),
+  ADD KEY `payment_verified_by` (`payment_verified_by`);
+
+--
+-- Indexes for table `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `student_id` (`student_id`),
+  ADD UNIQUE KEY `email` (`email`),
+  ADD KEY `idx_role` (`role`),
+  ADD KEY `idx_student_id` (`student_id`),
+  ADD KEY `idx_email` (`email`),
+  ADD KEY `idx_is_active` (`is_active`),
+  ADD KEY `idx_session_token` (`session_token`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `activities`
+--
+ALTER TABLE `activities`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `admissions`
+--
+ALTER TABLE `admissions`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `audit_logs`
+--
+ALTER TABLE `audit_logs`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `events`
+--
+ALTER TABLE `events`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `event_attendee_cache`
+--
+ALTER TABLE `event_attendee_cache`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `login_attempts`
+--
+ALTER TABLE `login_attempts`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `notifications`
+--
+ALTER TABLE `notifications`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `qr_blacklist`
+--
+ALTER TABLE `qr_blacklist`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tickets`
+--
+ALTER TABLE `tickets`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `activities`
+--
+ALTER TABLE `activities`
+  ADD CONSTRAINT `activities_ibfk_1` FOREIGN KEY (`event_id`) REFERENCES `events` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `admissions`
+--
+ALTER TABLE `admissions`
+  ADD CONSTRAINT `admissions_ibfk_1` FOREIGN KEY (`ticket_id`) REFERENCES `tickets` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `admissions_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `admissions_ibfk_3` FOREIGN KEY (`event_id`) REFERENCES `events` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `admissions_ibfk_4` FOREIGN KEY (`scanned_by`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `audit_logs`
+--
+ALTER TABLE `audit_logs`
+  ADD CONSTRAINT `audit_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `events`
+--
+ALTER TABLE `events`
+  ADD CONSTRAINT `events_ibfk_1` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `event_attendee_cache`
+--
+ALTER TABLE `event_attendee_cache`
+  ADD CONSTRAINT `event_attendee_cache_ibfk_1` FOREIGN KEY (`event_id`) REFERENCES `events` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `event_attendee_cache_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `notifications`
+--
+ALTER TABLE `notifications`
+  ADD CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `tickets`
+--
+ALTER TABLE `tickets`
+  ADD CONSTRAINT `tickets_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `tickets_ibfk_2` FOREIGN KEY (`event_id`) REFERENCES `events` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `tickets_ibfk_3` FOREIGN KEY (`payment_verified_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

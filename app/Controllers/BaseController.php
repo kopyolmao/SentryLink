@@ -6,6 +6,7 @@ use App\Libraries\MailerService;
 use App\Libraries\PortalService;
 use CodeIgniter\Controller;
 use CodeIgniter\Database\BaseConnection;
+use CodeIgniter\Database\Exceptions\DatabaseException;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\Session\Session;
@@ -42,6 +43,7 @@ abstract class BaseController extends Controller
         $this->session = session();
         helper($this->helpers);
         $this->closeExpiredEvents();
+        $this->cleanupTicketsForRemovedEvents();
         $this->mailer  = new MailerService();
         $this->portal  = new PortalService($this->db, $this->session, $this->mailer);
         $this->user    = $this->portal->currentUser();
@@ -83,15 +85,63 @@ abstract class BaseController extends Controller
     protected function closeExpiredEvents(): void
     {
         $now = $this->appNow()->format('Y-m-d H:i:s');
+        try {
+            $this->db->query(
+                "UPDATE events
+                 SET status = 'closed', updated_at = ?
+                 WHERE deleted_at IS NULL
+                   AND status IN ('draft', 'open', 'ongoing')
+                   AND TIMESTAMP(event_date, end_time) <= ?",
+                [$now, $now]
+            );
+        } catch (DatabaseException $e) {
+            log_message('error', 'Database unavailable while closing expired events: {message}', [
+                'message' => $e->getMessage(),
+            ]);
+        } catch (\Throwable $e) {
+            log_message('error', 'Unexpected error while closing expired events: {message}', [
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
 
-        $this->db->query(
-            "UPDATE events
-             SET status = 'closed', updated_at = ?
-             WHERE deleted_at IS NULL
-               AND status IN ('draft', 'open', 'ongoing')
-               AND TIMESTAMP(event_date, end_time) <= ?",
-            [$now, $now]
-        );
+    protected function cleanupTicketsForRemovedEvents(): void
+    {
+        $now = $this->appNow()->format('Y-m-d H:i:s');
+
+        try {
+            // Remove active tickets tied to soft-deleted events.
+            $this->db->query(
+                "UPDATE tickets t
+                 INNER JOIN events e ON e.id = t.event_id
+                 SET t.deleted_at = ?,
+                     t.payment_status = 'cancelled',
+                     t.updated_at = ?
+                 WHERE t.deleted_at IS NULL
+                   AND e.deleted_at IS NOT NULL",
+                [$now, $now]
+            );
+
+            // Safety net for orphan records if an event was physically removed without cascade.
+            $this->db->query(
+                "UPDATE tickets t
+                 LEFT JOIN events e ON e.id = t.event_id
+                 SET t.deleted_at = ?,
+                     t.payment_status = 'cancelled',
+                     t.updated_at = ?
+                 WHERE t.deleted_at IS NULL
+                   AND e.id IS NULL",
+                [$now, $now]
+            );
+        } catch (DatabaseException $e) {
+            log_message('error', 'Database unavailable while cleaning tickets for removed events: {message}', [
+                'message' => $e->getMessage(),
+            ]);
+        } catch (\Throwable $e) {
+            log_message('error', 'Unexpected error while cleaning tickets for removed events: {message}', [
+                'message' => $e->getMessage(),
+            ]);
+        }
     }
 
     protected function handleAuthenticatedPasswordReset(string $auditAction): array
@@ -100,25 +150,153 @@ abstract class BaseController extends Controller
         $error   = '';
 
         if ($this->request->getMethod() === 'POST' && $this->request->getPost('request_password_reset')) {
-            $enteredEmail  = strtolower(trim((string) $this->request->getPost('email')));
             $verifiedEmail = strtolower(trim((string) ($this->user['email'] ?? '')));
 
             if ((int) ($this->user['email_verified'] ?? 0) !== 1 || $verifiedEmail === '') {
                 $error = 'A verified email is required before you can request a password reset.';
-            } elseif ($enteredEmail === '' || $enteredEmail !== $verifiedEmail) {
-                $error = 'Enter the verified email currently bound to this account.';
             } else {
-                $result = $this->portal->issuePasswordReset($this->user, $auditAction);
-                if ($result['ok']) {
-                    $message = $result['message'];
-                    $this->user = $this->fetchOne('SELECT * FROM users WHERE id = ? LIMIT 1', [(int) $this->user['id']]);
+                $captchaError = $this->verifyAuthenticatedPasswordResetCaptcha();
+                if ($captchaError !== null) {
+                    $error = $captchaError;
                 } else {
-                    $error = $result['message'];
+                    $result = $this->portal->issuePasswordReset($this->user, $auditAction);
+                    if ($result['ok']) {
+                        $message = $result['message'];
+                        $this->user = $this->fetchOne('SELECT * FROM users WHERE id = ? LIMIT 1', [(int) $this->user['id']]);
+                    } else {
+                        $error = $result['message'];
+                    }
                 }
             }
         }
 
-        return compact('message', 'error');
+        $captcha = $this->issueAuthenticatedPasswordResetCaptcha();
+
+        return compact('message', 'error') + [
+            'passwordResetCaptchaToken' => $captcha['token'],
+            'passwordResetCaptchaImage' => $captcha['image'],
+        ];
+    }
+
+    /**
+     * @return array{token: string, image: string}
+     */
+    protected function issueAuthenticatedPasswordResetCaptcha(): array
+    {
+        $captcha = $this->buildSettingsResetCaptchaChallenge();
+
+        $this->session->set([
+            'settings_reset_captcha_token'   => $captcha['token'],
+            'settings_reset_captcha_hash'    => $captcha['hash'],
+            'settings_reset_captcha_expires' => $captcha['expiry'],
+        ]);
+
+        return [
+            'token' => $captcha['token'],
+            'image' => $captcha['image'],
+        ];
+    }
+
+    protected function verifyAuthenticatedPasswordResetCaptcha(): ?string
+    {
+        $postedToken  = trim((string) $this->request->getPost('reset_captcha_token'));
+        $postedAnswer = trim((string) $this->request->getPost('reset_captcha_answer'));
+        $sessionToken = trim((string) $this->session->get('settings_reset_captcha_token'));
+        $sessionHash  = trim((string) $this->session->get('settings_reset_captcha_hash'));
+        $expiresAt    = (int) ($this->session->get('settings_reset_captcha_expires') ?? 0);
+
+        $this->session->remove(['settings_reset_captcha_token', 'settings_reset_captcha_hash', 'settings_reset_captcha_expires']);
+
+        if ($sessionToken === '' || $sessionHash === '' || $expiresAt <= 0) {
+            return 'Captcha challenge expired. Please try again.';
+        }
+
+        if (time() > $expiresAt) {
+            return 'Captcha challenge expired. Please try again.';
+        }
+
+        if ($postedToken === '' || $postedAnswer === '') {
+            return 'Please complete the captcha challenge.';
+        }
+
+        if (preg_match('/^[a-zA-Z0-9]{4,10}$/', $postedAnswer) !== 1) {
+            return 'Invalid captcha answer format.';
+        }
+
+        if (! hash_equals($sessionToken, $postedToken)) {
+            return 'Captcha verification failed. Please try again.';
+        }
+
+        $postedHash = hash('sha256', $postedToken . '|' . strtoupper($postedAnswer));
+        if (! hash_equals($sessionHash, $postedHash)) {
+            return 'Captcha verification failed. Please try again.';
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array{token: string, hash: string, expiry: int, image: string}
+     */
+    protected function buildSettingsResetCaptchaChallenge(): array
+    {
+        $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        $text = '';
+        for ($i = 0; $i < 6; $i++) {
+            $text .= $alphabet[random_int(0, strlen($alphabet) - 1)];
+        }
+
+        $token  = bin2hex(random_bytes(16));
+        $hash   = hash('sha256', $token . '|' . $text);
+        $expiry = time() + 600;
+        $image  = $this->buildSettingsResetCaptchaSvgDataUri($text);
+
+        return [
+            'token'  => $token,
+            'hash'   => $hash,
+            'expiry' => $expiry,
+            'image'  => $image,
+        ];
+    }
+
+    protected function buildSettingsResetCaptchaSvgDataUri(string $text): string
+    {
+        $chars = str_split($text);
+        $charNodes = '';
+        $x = 18;
+
+        foreach ($chars as $char) {
+            $y = random_int(30, 46);
+            $rotate = random_int(-20, 20);
+            $charNodes .= '<text x="' . $x . '" y="' . $y . '" transform="rotate(' . $rotate . ' ' . $x . ' ' . $y . ')"'
+                . ' font-family="monospace" font-size="28" font-weight="700" fill="#0b1020">' . $char . '</text>';
+            $x += 26;
+        }
+
+        $noise = '';
+        for ($i = 0; $i < 10; $i++) {
+            $x1 = random_int(0, 200);
+            $y1 = random_int(0, 60);
+            $x2 = random_int(0, 200);
+            $y2 = random_int(0, 60);
+            $stroke = random_int(140, 220);
+            $noise .= '<line x1="' . $x1 . '" y1="' . $y1 . '" x2="' . $x2 . '" y2="' . $y2 . '" stroke="rgb(' . $stroke . ',' . ($stroke - 30) . ',' . ($stroke - 60) . ')" stroke-width="1.2" opacity="0.55" />';
+        }
+
+        for ($i = 0; $i < 35; $i++) {
+            $cx = random_int(0, 200);
+            $cy = random_int(0, 60);
+            $r = random_int(1, 2);
+            $noise .= '<circle cx="' . $cx . '" cy="' . $cy . '" r="' . $r . '" fill="rgba(255,255,255,0.45)" />';
+        }
+
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="60" viewBox="0 0 200 60">'
+            . '<rect width="200" height="60" rx="10" fill="#d9def0" />'
+            . $noise
+            . $charNodes
+            . '</svg>';
+
+        return 'data:image/svg+xml;base64,' . base64_encode($svg);
     }
 
     protected function normalizeGateStatus(?string $status): string

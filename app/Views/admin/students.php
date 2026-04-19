@@ -210,22 +210,20 @@ $selectedCourse = old('course_select');
                         <td><?= h(($student['course'] ?: '-') . ' / ' . ($student['year_level'] ?: '-')) ?></td>
                         <td><?= h($student['email']) ?></td>
                         <td><?= h($student['house']) ?></td>
-                        <td><span class="badge text-bg-<?= (int) $student['is_active'] === 1 ? 'success' : 'secondary' ?>"><?= (int) $student['is_active'] === 1 ? 'Active' : 'Terminated' ?></span></td>
+                        <td><span class="badge text-bg-<?= (int) $student['is_active'] === 1 ? 'success' : 'secondary' ?>"><?= (int) $student['is_active'] === 1 ? 'Active' : 'Deactivated' ?></span></td>
                         <td><span class="badge text-bg-<?= (int) $student['email_verified'] === 1 ? 'success' : 'warning' ?>"><?= (int) $student['email_verified'] === 1 ? 'Verified' : 'Pending' ?></span></td>
                         <td>
                             <div class="student-table-actions">
-                                <form method="POST">
-                                    <input type="hidden" name="target_id" value="<?= h((string) $student['id']) ?>">
-                                    <button
-                                        type="submit"
-                                        class="btn btn-outline-light btn-sm"
-                                        name="toggle_student_access"
-                                        value="1"
-                                        onclick="return confirm('<?= (int) $student['is_active'] === 1 ? 'Terminate' : 'Enable' ?> this student account?')"
-                                    >
-                                        <?= (int) $student['is_active'] === 1 ? 'Terminate' : 'Enable' ?>
-                                    </button>
-                                </form>
+                                <button
+                                    type="button"
+                                    class="btn btn-outline-light btn-sm js-toggle-student-access"
+                                    data-target-id="<?= h((string) $student['id']) ?>"
+                                    data-student-name="<?= h($fullName) ?>"
+                                    data-student-number="<?= h($student['student_id']) ?>"
+                                    data-student-active="<?= (int) $student['is_active'] === 1 ? '1' : '0' ?>"
+                                >
+                                    <?= (int) $student['is_active'] === 1 ? 'Deactivate' : 'Activate' ?>
+                                </button>
                                 <button
                                     type="button"
                                     class="btn btn-danger btn-sm js-delete-student"
@@ -262,18 +260,51 @@ $selectedCourse = old('course_select');
         </form>
     </div>
 </div>
+<div class="student-delete-modal" id="studentAccessModal" hidden>
+    <div class="student-delete-backdrop" data-close-student-access></div>
+    <div class="student-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="studentAccessTitle" aria-describedby="studentAccessDescription">
+        <h3 class="h5 mb-2" id="studentAccessTitle">Update student account?</h3>
+        <p class="student-delete-copy" id="studentAccessDescription"></p>
+        <div class="student-delete-card">
+            <strong id="studentAccessName"></strong>
+            <small id="studentAccessMeta"></small>
+        </div>
+        <form method="POST">
+            <input type="hidden" name="target_id" id="student_access_target_id">
+            <div class="student-delete-actions">
+                <button type="button" class="btn btn-outline-light" id="studentAccessCancel" data-close-student-access>Keep as Is</button>
+                <button type="submit" class="btn btn-danger" id="studentAccessConfirmButton" name="toggle_student_access" value="1">Confirm</button>
+            </div>
+        </form>
+    </div>
+</div>
 <script>
 const courseSelect = document.getElementById("course_select");
 const otherCourseField = document.getElementById("other_course_field");
 const otherCourseInput = document.getElementById("course_other");
 const studentDeleteModal = document.getElementById("studentDeleteModal");
+const studentAccessModal = document.getElementById("studentAccessModal");
 const studentDeleteName = document.getElementById("studentDeleteName");
 const studentDeleteMeta = document.getElementById("studentDeleteMeta");
 const studentDeleteTargetId = document.getElementById("student_delete_target_id");
 const studentDeleteCancel = document.getElementById("studentDeleteCancel");
+const studentAccessTitle = document.getElementById("studentAccessTitle");
+const studentAccessDescription = document.getElementById("studentAccessDescription");
+const studentAccessName = document.getElementById("studentAccessName");
+const studentAccessMeta = document.getElementById("studentAccessMeta");
+const studentAccessTargetId = document.getElementById("student_access_target_id");
+const studentAccessCancel = document.getElementById("studentAccessCancel");
+const studentAccessConfirmButton = document.getElementById("studentAccessConfirmButton");
 const deleteButtons = document.querySelectorAll(".js-delete-student");
-const modalCloseButtons = document.querySelectorAll("[data-close-student-delete]");
+const toggleAccessButtons = document.querySelectorAll(".js-toggle-student-access");
+const deleteModalCloseButtons = document.querySelectorAll("[data-close-student-delete]");
+const accessModalCloseButtons = document.querySelectorAll("[data-close-student-access]");
 const passwordToggles = document.querySelectorAll(".js-password-toggle");
+
+function syncBodyScrollLock() {
+    const hasOpenModal = (studentDeleteModal && !studentDeleteModal.hidden) || (studentAccessModal && !studentAccessModal.hidden);
+    document.body.style.overflow = hasOpenModal ? "hidden" : "";
+}
 
 function syncCourseField() {
     if (!courseSelect || !otherCourseField || !otherCourseInput) {
@@ -304,7 +335,7 @@ function openDeleteModal(targetId, studentName, studentNumber) {
     }
 
     studentDeleteModal.hidden = false;
-    document.body.style.overflow = "hidden";
+    syncBodyScrollLock();
 }
 
 function closeDeleteModal() {
@@ -313,7 +344,46 @@ function closeDeleteModal() {
     }
 
     studentDeleteModal.hidden = true;
-    document.body.style.overflow = "";
+    syncBodyScrollLock();
+}
+
+function openAccessModal(targetId, studentName, studentNumber, isActive) {
+    if (!studentAccessModal || !studentAccessTargetId || !studentAccessConfirmButton) {
+        return;
+    }
+
+    const shouldDeactivate = isActive;
+    studentAccessTargetId.value = targetId;
+    if (studentAccessName) {
+        studentAccessName.textContent = studentName || "Selected student";
+    }
+    if (studentAccessMeta) {
+        studentAccessMeta.textContent = studentNumber || "";
+    }
+    if (studentAccessTitle) {
+        studentAccessTitle.textContent = shouldDeactivate ? "Deactivate student account?" : "Activate student account?";
+    }
+    if (studentAccessDescription) {
+        studentAccessDescription.textContent = shouldDeactivate
+            ? "This signs the student out and blocks login until the account is activated again."
+            : "This allows the student to sign in and use the portal again.";
+    }
+
+    studentAccessConfirmButton.textContent = shouldDeactivate ? "Deactivate Student" : "Activate Student";
+    studentAccessConfirmButton.classList.toggle("btn-danger", shouldDeactivate);
+    studentAccessConfirmButton.classList.toggle("btn-primary", !shouldDeactivate);
+
+    studentAccessModal.hidden = false;
+    syncBodyScrollLock();
+}
+
+function closeAccessModal() {
+    if (!studentAccessModal || studentAccessModal.hidden) {
+        return;
+    }
+
+    studentAccessModal.hidden = true;
+    syncBodyScrollLock();
 }
 
 function setupPasswordToggle(button) {
@@ -349,17 +419,37 @@ deleteButtons.forEach((button) => {
     });
 });
 
-modalCloseButtons.forEach((button) => {
+toggleAccessButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+        openAccessModal(
+            button.getAttribute("data-target-id") || "",
+            button.getAttribute("data-student-name") || "",
+            button.getAttribute("data-student-number") || "",
+            button.getAttribute("data-student-active") === "1"
+        );
+    });
+});
+
+deleteModalCloseButtons.forEach((button) => {
     button.addEventListener("click", closeDeleteModal);
+});
+
+accessModalCloseButtons.forEach((button) => {
+    button.addEventListener("click", closeAccessModal);
 });
 
 if (studentDeleteCancel) {
     studentDeleteCancel.addEventListener("click", closeDeleteModal);
 }
 
+if (studentAccessCancel) {
+    studentAccessCancel.addEventListener("click", closeAccessModal);
+}
+
 document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
         closeDeleteModal();
+        closeAccessModal();
     }
 });
 

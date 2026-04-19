@@ -1,7 +1,16 @@
 <?php shell_start('SentryLink | Reports', $user, 'admin', 'reports', 'Reports', 'Attendance and ticket summary per event.'); ?>
+<?php
+$exportError = session()->getFlashdata('export_error');
+$hasReportRows = $reports !== [];
+?>
+<?php if ($exportError !== null && $exportError !== ''): ?><div class="alert alert-danger"><?= h((string) $exportError) ?></div><?php endif; ?>
 <div class="panel">
     <div class="d-flex justify-content-end mb-3">
-        <a class="btn btn-outline-light" href="<?= h(app_url('admin/reports?export=csv')) ?>">Export CSV</a>
+        <?php if ($hasReportRows): ?>
+            <a class="btn btn-outline-light" href="<?= h(app_url('admin/reports?export=csv')) ?>">Export CSV</a>
+        <?php else: ?>
+            <button type="button" class="btn btn-outline-light" disabled title="No data to export">Export CSV</button>
+        <?php endif; ?>
     </div>
     <div class="table-wrap">
         <table class="table table-dark align-middle">

@@ -50,6 +50,46 @@ php spark serve --host 127.0.0.1 --port 8080
 
 Then open `http://127.0.0.1:8080`.
 
+If your deployment was initialized from an older/incomplete schema export and login does not route after successful credentials, run:
+
+```bash
+php spark syntrelink:repair
+```
+
+This reapplies schema compatibility fixes and normalizes test accounts.
+
+## Dual Database Setup (Local + AwardSpace)
+
+The app now supports two DB groups:
+
+- `default` for local development
+- `awardspace` for hosted deployment
+
+Set these in your server `.env`:
+
+```dotenv
+CI_ENVIRONMENT = production
+database.defaultGroup = awardspace
+
+database.awardspace.hostname = fdb1032.awardspace.net
+database.awardspace.port = 3306
+database.awardspace.database = your_awardspace_database
+database.awardspace.username = your_awardspace_username
+database.awardspace.password = your_awardspace_password
+database.awardspace.DBDriver = MySQLi
+```
+
+For local development, keep using:
+
+```dotenv
+database.defaultGroup = default
+database.default.hostname = 127.0.0.1
+database.default.database = syntrelink_db
+database.default.username = root
+database.default.password =
+database.default.DBDriver = MySQLi
+```
+
 ## Git Notes
 
 Runtime files are intentionally ignored:
@@ -61,4 +101,3 @@ Runtime files are intentionally ignored:
 - unrelated local Topless project artifacts found in the restored web root
 
 Do not commit real production credentials. Keep deployment-specific secrets in `.env` or the server environment.
-# SentryLink

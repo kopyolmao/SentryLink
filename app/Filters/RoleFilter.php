@@ -15,11 +15,11 @@ class RoleFilter implements FilterInterface
     public function before(RequestInterface $request, $arguments = null)
     {
         $portal = new PortalService(db_connect(), session(), new MailerService());
-        $userId = $portal->currentUserId();
-        $role   = $portal->currentRole();
+        $user   = $portal->currentUser();
+        $role   = is_array($user) ? $portal->currentRole() : null;
         $roles  = is_array($arguments) ? $arguments : [];
 
-        if (! $userId || ! $role) {
+        if (! is_array($user) || ! is_string($role) || $role === '') {
             $loginRole = $roles[0] ?? 'student';
 
             return redirect()->to(site_url($portal->roleLogin($loginRole)));
@@ -27,12 +27,6 @@ class RoleFilter implements FilterInterface
 
         if ($roles !== [] && ! in_array($role, $roles, true)) {
             return redirect()->to(site_url($portal->roleHome($role)));
-        }
-
-        if (! $portal->currentUser()) {
-            $loginRole = $roles[0] ?? 'student';
-
-            return redirect()->to(site_url($portal->roleLogin($loginRole)));
         }
 
         return null;

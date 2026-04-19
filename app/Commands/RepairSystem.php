@@ -31,6 +31,7 @@ class RepairSystem extends BaseCommand
         $passwordHash = password_hash('Password123!', PASSWORD_BCRYPT);
 
         foreach ($this->testAccounts() as $account) {
+            $accountId = (int) $account['id'];
             $existing = $db->query(
                 'SELECT id FROM users WHERE student_id = ? OR email = ? LIMIT 1',
                 [$account['student_id'], $account['email']]
@@ -39,11 +40,12 @@ class RepairSystem extends BaseCommand
             if ($existing) {
                 $db->query(
                     'UPDATE users
-                     SET student_id = ?, first_name = ?, last_name = ?, email = ?, password_hash = ?,
+                     SET id = ?, student_id = ?, first_name = ?, last_name = ?, email = ?, password_hash = ?,
                          role = ?, course = ?, year_level = ?, house = ?, email_verified = 1, is_active = 1, deleted_at = NULL,
                          created_at = COALESCE(created_at, NOW()), updated_at = NOW()
                      WHERE id = ?',
                     [
+                        $accountId,
                         $account['student_id'],
                         $account['first_name'],
                         $account['last_name'],
@@ -63,10 +65,11 @@ class RepairSystem extends BaseCommand
 
             $db->query(
                 'INSERT INTO users (
-                    student_id, first_name, last_name, email, password_hash, role, course, year_level, house,
+                    id, student_id, first_name, last_name, email, password_hash, role, course, year_level, house,
                     email_verified, is_active, created_at, updated_at
-                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, NOW(), NOW())',
+                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, NOW(), NOW())',
                 [
+                    $accountId,
                     $account['student_id'],
                     $account['first_name'],
                     $account['last_name'],
@@ -120,6 +123,7 @@ class RepairSystem extends BaseCommand
 
     /**
      * @return list<array{
+     *     id: int,
      *     student_id: string,
      *     first_name: string,
      *     last_name: string,
@@ -134,6 +138,7 @@ class RepairSystem extends BaseCommand
     {
         return [
             [
+                'id'         => 3,
                 'student_id' => 'STU001',
                 'first_name' => 'Juan',
                 'last_name'  => 'Dela Cruz',
@@ -144,6 +149,7 @@ class RepairSystem extends BaseCommand
                 'house'      => 'Azul',
             ],
             [
+                'id'         => 4,
                 'student_id' => 'STU002',
                 'first_name' => 'Maria',
                 'last_name'  => 'Santos',
@@ -154,6 +160,7 @@ class RepairSystem extends BaseCommand
                 'house'      => 'Cahel',
             ],
             [
+                'id'         => 5,
                 'student_id' => 'STU003',
                 'first_name' => 'Pedro',
                 'last_name'  => 'Garcia',
@@ -164,6 +171,7 @@ class RepairSystem extends BaseCommand
                 'house'      => 'Roxxo',
             ],
             [
+                'id'         => 6,
                 'student_id' => 'OFF001',
                 'first_name' => 'Mark',
                 'last_name'  => 'Tan',
@@ -174,6 +182,7 @@ class RepairSystem extends BaseCommand
                 'house'      => '',
             ],
             [
+                'id'         => 7,
                 'student_id' => 'OFF002',
                 'first_name' => 'Annie',
                 'last_name'  => 'Lee',
@@ -184,6 +193,7 @@ class RepairSystem extends BaseCommand
                 'house'      => '',
             ],
             [
+                'id'         => 1,
                 'student_id' => 'ADMIN001',
                 'first_name' => 'System',
                 'last_name'  => 'Administrator',
@@ -194,6 +204,7 @@ class RepairSystem extends BaseCommand
                 'house'      => '',
             ],
             [
+                'id'         => 2,
                 'student_id' => 'DIR001',
                 'first_name' => 'School',
                 'last_name'  => 'Director',

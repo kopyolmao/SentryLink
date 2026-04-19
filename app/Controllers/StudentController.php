@@ -104,8 +104,22 @@ class StudentController extends BaseController
 
     public function notifications(): string
     {
-        if ($this->request->getMethod() === 'POST' && $this->request->getPost('mark_all_read')) {
-            $this->execute('UPDATE notifications SET is_read = 1 WHERE user_id = ?', [(int) $this->user['id']]);
+        if ($this->request->getMethod() === 'POST') {
+            $userId = (int) $this->user['id'];
+
+            if ($this->request->getPost('mark_all_read')) {
+                $this->execute('UPDATE notifications SET is_read = 1 WHERE user_id = ?', [$userId]);
+            } else {
+                $notificationId = (int) $this->request->getPost('notification_id');
+                if ($notificationId > 0) {
+                    $this->execute(
+                        'UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?',
+                        [$notificationId, $userId]
+                    );
+                }
+            }
+
+            return redirect()->to(app_url('s/notifications'));
         }
 
         $notifications = $this->fetchAll(

@@ -323,6 +323,11 @@ html.scrollbar-active *::-webkit-scrollbar-corner { background: var(--scroll-tra
     border-color: rgba(255, 125, 125, 0.5);
 }
 .content { padding: 28px; }
+.content.is-navigating {
+    opacity: 0.72;
+    pointer-events: none;
+    transition: opacity 180ms ease;
+}
 .topbar { display: flex; justify-content: space-between; align-items: start; gap: 16px; margin-bottom: 24px; }
 .heading h1 { margin: 0; font-size: 30px; }
 .heading p { margin: 6px 0 0; color: var(--muted); }
@@ -336,10 +341,27 @@ html.scrollbar-active *::-webkit-scrollbar-corner { background: var(--scroll-tra
 .metric { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 18px; padding: 18px; height: 100%; }
 .metric .value { font-size: 32px; font-weight: 800; margin-top: 6px; }
 .table-wrap { overflow-x: auto; }
+.filter-actions {
+    margin-top: 0.55rem;
+}
 .table-dark { --bs-table-bg: transparent; --bs-table-striped-bg: rgba(255,255,255,0.02); --bs-table-border-color: var(--border); margin-bottom: 0; }
 .btn-primary { background: var(--accent); border-color: var(--accent); }
 .btn-outline-light { border-color: var(--border); color: var(--text); }
 .form-control, .form-select, .form-control:focus, .form-select:focus { background: #0d1527; color: #fff; border-color: #2b3959; }
+.form-control[type="number"] {
+    color-scheme: dark;
+}
+.form-control[type="number"]::-webkit-outer-spin-button,
+.form-control[type="number"]::-webkit-inner-spin-button {
+    margin: 0;
+    opacity: 1;
+    border-left: 1px solid #2b3959;
+    background: linear-gradient(180deg, rgba(157, 78, 221, 0.34) 0%, rgba(31, 102, 209, 0.26) 100%);
+}
+.form-control[type="number"]::-webkit-inner-spin-button:hover,
+.form-control[type="number"]::-webkit-outer-spin-button:hover {
+    background: linear-gradient(180deg, rgba(157, 78, 221, 0.52) 0%, rgba(31, 102, 209, 0.38) 100%);
+}
 .form-control:disabled, .form-control[readonly], .form-select:disabled {
     background: #121a2d;
     color: #cfd8ee;
@@ -405,7 +427,7 @@ code { color: #bfd3ff; }
         <?php foreach ($navItems as $key => $item): ?>
             <a class="<?= $key === $active ? 'active' : '' ?>" href="<?= h($item[1]) ?>"><?= h($item[0]) ?></a>
         <?php endforeach; ?>
-        <a class="logout-link" href="<?= h($logout) ?>">Logout</a>
+        <a class="logout-link" href="<?= h($logout) ?>" data-no-ajax="1">Logout</a>
     </aside>
     <main class="content">
         <div class="topbar">
@@ -497,8 +519,490 @@ HTML;
 </script>
 HTML;
 
+        $dynamicShellScript = <<<'HTML'
+<script>
+(() => {
+    const state = window.__sentrylinkDynamicState || (window.__sentrylinkDynamicState = {
+        initialized: false,
+        bound: false,
+        navigating: false,
+        currentScope: 0,
+        scopes: new Map(),
+        loadedScripts: new Set(),
+    });
+
+    const ensureScope = (scopeId) => {
+        if (!state.scopes.has(scopeId)) {
+            state.scopes.set(scopeId, {
+                intervals: new Set(),
+                timeouts: new Set(),
+                listeners: [],
+            });
+        }
+
+        return state.scopes.get(scopeId);
+    };
+
+    if (!state.initialized) {
+        state.initialized = true;
+
+        state.native = {
+            setInterval: window.setInterval.bind(window),
+            clearInterval: window.clearInterval.bind(window),
+            setTimeout: window.setTimeout.bind(window),
+            clearTimeout: window.clearTimeout.bind(window),
+            windowAdd: window.addEventListener.bind(window),
+            windowRemove: window.removeEventListener.bind(window),
+            documentAdd: document.addEventListener.bind(document),
+            documentRemove: document.removeEventListener.bind(document),
+        };
+
+        document.querySelectorAll("script[src]").forEach((script) => {
+            try {
+                state.loadedScripts.add(new URL(script.getAttribute("src") || "", window.location.href).href);
+            } catch (error) {
+            }
+        });
+
+        ensureScope(state.currentScope);
+
+        window.setInterval = (handler, timeout, ...args) => {
+            const intervalId = state.native.setInterval(handler, timeout, ...args);
+            ensureScope(state.currentScope).intervals.add(intervalId);
+            return intervalId;
+        };
+
+        window.clearInterval = (intervalId) => {
+            state.scopes.forEach((scope) => {
+                if (scope.intervals.has(intervalId)) {
+                    scope.intervals.delete(intervalId);
+                }
+            });
+            return state.native.clearInterval(intervalId);
+        };
+
+        window.setTimeout = (handler, timeout, ...args) => {
+            const timeoutId = state.native.setTimeout(handler, timeout, ...args);
+            ensureScope(state.currentScope).timeouts.add(timeoutId);
+            return timeoutId;
+        };
+
+        window.clearTimeout = (timeoutId) => {
+            state.scopes.forEach((scope) => {
+                if (scope.timeouts.has(timeoutId)) {
+                    scope.timeouts.delete(timeoutId);
+                }
+            });
+            return state.native.clearTimeout(timeoutId);
+        };
+
+        window.addEventListener = (type, listener, options) => {
+            state.native.windowAdd(type, listener, options);
+            ensureScope(state.currentScope).listeners.push({
+                target: "window",
+                type,
+                listener,
+                options,
+            });
+        };
+
+        document.addEventListener = (type, listener, options) => {
+            state.native.documentAdd(type, listener, options);
+            ensureScope(state.currentScope).listeners.push({
+                target: "document",
+                type,
+                listener,
+                options,
+            });
+        };
+    }
+
+    const cleanupScope = (scopeId) => {
+        const scope = state.scopes.get(scopeId);
+        if (!scope) {
+            return;
+        }
+
+        scope.intervals.forEach((intervalId) => {
+            state.native.clearInterval(intervalId);
+        });
+        scope.intervals.clear();
+
+        scope.timeouts.forEach((timeoutId) => {
+            state.native.clearTimeout(timeoutId);
+        });
+        scope.timeouts.clear();
+
+        scope.listeners.forEach((entry) => {
+            if (entry.target === "window") {
+                state.native.windowRemove(entry.type, entry.listener, entry.options);
+                return;
+            }
+
+            state.native.documentRemove(entry.type, entry.listener, entry.options);
+        });
+        scope.listeners = [];
+        state.scopes.delete(scopeId);
+    };
+
+    const setNavigationState = (isNavigating) => {
+        const main = document.querySelector("main.content");
+        if (!main) {
+            return;
+        }
+
+        main.classList.toggle("is-navigating", isNavigating);
+        main.setAttribute("aria-busy", isNavigating ? "true" : "false");
+    };
+
+    const releaseViewportLocks = () => {
+        if (document.body) {
+            document.body.style.overflow = "";
+        }
+        document.documentElement.style.overflow = "";
+    };
+
+    const runInlineScript = (code) => {
+        if (typeof code !== "string" || code.trim() === "") {
+            return;
+        }
+
+        try {
+            const executor = new Function(code);
+            executor();
+        } catch (error) {
+            console.error("SentryLink dynamic script error:", error);
+        }
+    };
+
+    const runScriptsInOrder = async (root) => {
+        if (!root) {
+            return;
+        }
+
+        const scripts = Array.from(root.querySelectorAll("script"));
+        for (const script of scripts) {
+            const src = (script.getAttribute("src") || "").trim();
+            if (src !== "") {
+                let absoluteSrc = "";
+                try {
+                    absoluteSrc = new URL(src, window.location.href).href;
+                } catch (error) {
+                    script.remove();
+                    continue;
+                }
+
+                if (!state.loadedScripts.has(absoluteSrc)) {
+                    await new Promise((resolve) => {
+                        const externalScript = document.createElement("script");
+                        for (const attributeName of script.getAttributeNames()) {
+                            if (attributeName.toLowerCase() === "src") {
+                                continue;
+                            }
+                            externalScript.setAttribute(attributeName, script.getAttribute(attributeName) || "");
+                        }
+
+                        externalScript.src = absoluteSrc;
+                        externalScript.async = false;
+                        externalScript.onload = () => resolve();
+                        externalScript.onerror = () => resolve();
+                        document.head.appendChild(externalScript);
+                    });
+
+                    state.loadedScripts.add(absoluteSrc);
+                }
+
+                script.remove();
+                continue;
+            }
+
+            runInlineScript(script.textContent || "");
+            script.remove();
+        }
+    };
+
+    const isHtmlResponse = (response) => {
+        const contentType = (response.headers.get("content-type") || "").toLowerCase();
+        return contentType.includes("text/html") || contentType.includes("application/xhtml+xml");
+    };
+
+    const shouldBypassLink = (anchor, event) => {
+        if (!anchor || anchor.dataset.noAjax === "1") {
+            return true;
+        }
+
+        if (anchor.classList.contains("logout-link")) {
+            return true;
+        }
+
+        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+            return true;
+        }
+
+        const href = (anchor.getAttribute("href") || "").trim();
+        if (href === "" || href.startsWith("#") || href.startsWith("javascript:") || href.startsWith("mailto:") || href.startsWith("tel:")) {
+            return true;
+        }
+
+        const target = (anchor.getAttribute("target") || "").trim().toLowerCase();
+        if (target !== "" && target !== "_self") {
+            return true;
+        }
+
+        if (anchor.hasAttribute("download")) {
+            return true;
+        }
+
+        let url;
+        try {
+            url = new URL(anchor.href, window.location.href);
+        } catch (error) {
+            return true;
+        }
+
+        if (url.origin !== window.location.origin) {
+            return true;
+        }
+
+        if (url.searchParams.has("export")) {
+            return true;
+        }
+
+        return false;
+    };
+
+    const shouldBypassForm = (form) => {
+        if (!form || form.dataset.noAjax === "1") {
+            return true;
+        }
+
+        const target = (form.getAttribute("target") || "").trim().toLowerCase();
+        if (target !== "" && target !== "_self") {
+            return true;
+        }
+
+        let actionUrl;
+        try {
+            actionUrl = new URL(form.getAttribute("action") || window.location.href, window.location.href);
+        } catch (error) {
+            return true;
+        }
+
+        if (actionUrl.origin !== window.location.origin) {
+            return true;
+        }
+
+        if (actionUrl.searchParams.has("export")) {
+            return true;
+        }
+
+        return false;
+    };
+
+    const pickDefaultSubmitter = (form) => {
+        return form.querySelector("button[type='submit'], button:not([type]), input[type='submit']");
+    };
+
+    const buildFormRequest = (form, submitter) => {
+        const method = ((form.getAttribute("method") || "GET").trim() || "GET").toUpperCase();
+        const actionUrl = new URL(form.getAttribute("action") || window.location.href, window.location.href);
+        const formData = new FormData(form);
+        const effectiveSubmitter = submitter || pickDefaultSubmitter(form);
+
+        if (effectiveSubmitter && effectiveSubmitter.name) {
+            formData.append(effectiveSubmitter.name, effectiveSubmitter.value ?? "");
+        }
+
+        if (method === "GET") {
+            const params = new URLSearchParams();
+            for (const [key, value] of formData.entries()) {
+                if (value instanceof File) {
+                    continue;
+                }
+                params.append(key, value);
+            }
+            actionUrl.search = params.toString();
+            return {
+                method,
+                url: actionUrl.href,
+                body: null,
+                history: "push",
+            };
+        }
+
+        return {
+            method: method === "POST" ? "POST" : method,
+            url: actionUrl.href,
+            body: formData,
+            history: "replace",
+        };
+    };
+
+    const updateShellFromHtml = async (html) => {
+        const parser = new DOMParser();
+        const nextDocument = parser.parseFromString(html, "text/html");
+        const nextMain = nextDocument.querySelector("main.content");
+        const nextSidebar = nextDocument.querySelector(".sidebar");
+        const currentMain = document.querySelector("main.content");
+        const currentSidebar = document.querySelector(".sidebar");
+
+        if (!nextMain || !currentMain) {
+            return false;
+        }
+
+        const previousScope = state.currentScope;
+        cleanupScope(previousScope);
+        state.currentScope = previousScope + 1;
+        ensureScope(state.currentScope);
+
+        if (nextSidebar && currentSidebar) {
+            const sidebarClone = nextSidebar.cloneNode(true);
+            currentSidebar.replaceWith(sidebarClone);
+        }
+
+        const mainClone = nextMain.cloneNode(true);
+        currentMain.replaceWith(mainClone);
+
+        if (nextDocument.title && nextDocument.title.trim() !== "") {
+            document.title = nextDocument.title;
+        }
+
+        const mountedMain = document.querySelector("main.content");
+        await runScriptsInOrder(mountedMain);
+        document.dispatchEvent(new CustomEvent("sentrylink:content-updated", {
+            detail: { url: window.location.href },
+        }));
+
+        return true;
+    };
+
+    const requestPage = async (url, options = {}) => {
+        if (!url || state.navigating) {
+            return;
+        }
+
+        const {
+            method = "GET",
+            body = null,
+            history = "push",
+            scrollToTop = false,
+        } = options;
+
+        state.navigating = true;
+        releaseViewportLocks();
+        setNavigationState(true);
+
+        try {
+            const response = await fetch(url, {
+                method,
+                body,
+                credentials: "same-origin",
+                cache: "no-store",
+                headers: {
+                    Accept: "text/html,application/xhtml+xml",
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+                redirect: "follow",
+            });
+
+            const finalUrl = response.url || url;
+            if (!isHtmlResponse(response)) {
+                window.location.assign(finalUrl);
+                return;
+            }
+
+            const html = await response.text();
+            const swapped = await updateShellFromHtml(html);
+            if (!swapped) {
+                window.location.assign(finalUrl);
+                return;
+            }
+
+            if (history === "push") {
+                window.history.pushState({}, "", finalUrl);
+            } else if (history === "replace") {
+                window.history.replaceState({}, "", finalUrl);
+            }
+
+            if (scrollToTop) {
+                window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+            }
+        } catch (error) {
+            if (error && error.name === "AbortError") {
+                return;
+            }
+            console.error("SentryLink dynamic navigation error:", error);
+        } finally {
+            state.navigating = false;
+            releaseViewportLocks();
+            setNavigationState(false);
+        }
+    };
+
+    const onDocumentClick = (event) => {
+        const anchor = event.target instanceof Element ? event.target.closest("a") : null;
+        if (!anchor || shouldBypassLink(anchor, event)) {
+            return;
+        }
+
+        event.preventDefault();
+        requestPage(anchor.href, {
+            method: "GET",
+            history: "push",
+            scrollToTop: true,
+        });
+    };
+
+    const onFormSubmit = (event) => {
+        const form = event.target instanceof HTMLFormElement ? event.target : null;
+        if (!form || shouldBypassForm(form)) {
+            return;
+        }
+
+        event.preventDefault();
+        const submitter = event.submitter instanceof HTMLElement ? event.submitter : pickDefaultSubmitter(form);
+        if (submitter instanceof HTMLElement) {
+            submitter.setAttribute("disabled", "disabled");
+        }
+
+        const request = buildFormRequest(form, submitter);
+        const shouldScrollToTop = request.method === "GET";
+
+        requestPage(request.url, {
+            method: request.method,
+            body: request.body,
+            history: request.history,
+            scrollToTop: shouldScrollToTop,
+        }).finally(() => {
+            if (submitter instanceof HTMLElement && submitter.isConnected) {
+                submitter.removeAttribute("disabled");
+            }
+        });
+    };
+
+    if (!state.bound) {
+        state.bound = true;
+        state.native.documentAdd("click", onDocumentClick);
+        state.native.documentAdd("submit", onFormSubmit);
+        state.native.windowAdd("popstate", () => {
+            requestPage(window.location.href, {
+                method: "GET",
+                history: "none",
+                scrollToTop: false,
+            });
+        });
+    }
+
+    window.SentryLinkShell = window.SentryLinkShell || {};
+    window.SentryLinkShell.navigate = (url) => requestPage(url, { method: "GET", history: "push", scrollToTop: true });
+    window.SentryLinkShell.refreshCurrentPage = () => requestPage(window.location.href, { method: "GET", history: "replace", scrollToTop: false });
+})();
+</script>
+HTML;
+
         echo $loaderScript;
         echo $scrollScript;
+        echo $dynamicShellScript;
         echo $script;
         ?>
     </main>

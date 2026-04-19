@@ -6,8 +6,11 @@ class Home extends BaseController
 {
     public function index()
     {
-        if ($this->portal->currentUserId() && $this->portal->currentRole()) {
-            return redirect()->to(site_url($this->portal->roleHome((string) $this->portal->currentRole())));
+        $user = $this->portal->currentUser();
+        $role = $this->portal->currentRole();
+
+        if (is_array($user) && is_string($role) && $role !== '') {
+            return redirect()->to(site_url($this->portal->roleHome($role)));
         }
 
         return redirect()->to(site_url('s/auth/login'));

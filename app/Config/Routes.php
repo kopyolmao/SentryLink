@@ -11,6 +11,7 @@ $routes->get('login', static fn () => redirect()->to(site_url('s/auth/login')));
 $routes->get('logout', static fn () => redirect()->to(site_url('s/auth/logout')));
 $routes->get('forgot-password', static fn () => redirect()->to(site_url('s/auth/forgot-password')));
 $routes->post('auth/login-captcha-refresh', 'AuthController::refreshLoginCaptcha', ['filter' => 'guest']);
+$routes->post('auth/password-reset-captcha-refresh', 'AuthController::refreshPasswordResetCaptcha', ['filter' => 'role:student,ssg,admin,director']);
 
 // Legacy plain-PHP entry points
 $routes->get('login.php', static fn () => redirect()->to(site_url('s/auth/login')));

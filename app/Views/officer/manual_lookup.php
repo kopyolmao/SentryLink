@@ -106,7 +106,13 @@ if (manualToggleBtn) {
             }
 
             manualToggleStatus.textContent = data.message || "Updated.";
-            setTimeout(() => window.location.reload(), 750);
+            setTimeout(() => {
+                if (window.SentryLinkShell && typeof window.SentryLinkShell.refreshCurrentPage === "function") {
+                    window.SentryLinkShell.refreshCurrentPage();
+                } else {
+                    window.location.reload();
+                }
+            }, 750);
         } catch (error) {
             manualToggleStatus.textContent = error.message;
             manualToggleBtn.disabled = false;

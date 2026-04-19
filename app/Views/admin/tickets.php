@@ -8,14 +8,21 @@ if ($statusFilter !== '') {
     $ticketExportParams['status'] = $statusFilter;
 }
 $ticketExportParams['export'] = 'csv';
+$exportError = session()->getFlashdata('export_error');
+$hasTicketRows = $tickets !== [];
 ?>
+<?php if ($exportError !== null && $exportError !== ''): ?><div class="alert alert-danger"><?= h((string) $exportError) ?></div><?php endif; ?>
 <div class="panel">
     <form method="GET" class="row g-3 align-items-end">
         <div class="col-md-4"><label class="form-label">Event</label><select class="form-select" name="event_id"><option value="">All events</option><?php foreach ($events as $event): ?><option value="<?= $event['id'] ?>" <?= $eventFilter === (int) $event['id'] ? 'selected' : '' ?>><?= h($event['title']) ?></option><?php endforeach; ?></select></div>
         <div class="col-md-4"><label class="form-label">Payment Status</label><select class="form-select" name="status"><option value="">All statuses</option><?php foreach (['pending', 'paid', 'free', 'cancelled'] as $status): ?><option value="<?= h($status) ?>" <?= $statusFilter === $status ? 'selected' : '' ?>><?= h(ucfirst($status)) ?></option><?php endforeach; ?></select></div>
-        <div class="col-md-4 d-flex gap-2">
+        <div class="col-md-4 d-flex gap-2 filter-actions">
             <button class="btn btn-primary">Apply Filters</button>
-            <a class="btn btn-outline-light" href="<?= h(app_url('admin/tickets?' . http_build_query($ticketExportParams))) ?>">Export CSV</a>
+            <?php if ($hasTicketRows): ?>
+                <a class="btn btn-outline-light" href="<?= h(app_url('admin/tickets?' . http_build_query($ticketExportParams))) ?>">Export CSV</a>
+            <?php else: ?>
+                <button type="button" class="btn btn-outline-light" disabled title="No data to export">Export CSV</button>
+            <?php endif; ?>
         </div>
     </form>
 </div>

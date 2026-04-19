@@ -343,7 +343,11 @@ async function syncStudentTicketState() {
 
         if (data.state_hash !== studentTicketStateHash) {
             studentTicketStateReloading = true;
-            window.location.reload();
+            if (window.SentryLinkShell && typeof window.SentryLinkShell.refreshCurrentPage === "function") {
+                window.SentryLinkShell.refreshCurrentPage();
+            } else {
+                window.location.reload();
+            }
         }
     } catch (error) {
     }

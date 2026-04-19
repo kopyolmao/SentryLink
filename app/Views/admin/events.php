@@ -17,6 +17,65 @@
     min-width: 0;
 }
 
+.event-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.field-help {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.15rem;
+    height: 1.15rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: help;
+    padding: 0;
+}
+
+.field-help[data-tooltip-active="true"] {
+    border-color: rgba(140, 182, 255, 0.95);
+    background: rgba(91, 139, 255, 0.32);
+}
+
+.field-help-tooltip {
+    position: fixed;
+    z-index: 1400;
+    max-width: min(320px, calc(100vw - 24px));
+    background: rgba(12, 16, 40, 0.96);
+    color: #f6f8ff;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 12px;
+    padding: 0.5rem 0.6rem;
+    font-size: 0.76rem;
+    line-height: 1.4;
+    text-align: left;
+    white-space: normal;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.field-help-tooltip[data-visible="true"] {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.field-note {
+    margin: 0.4rem 0 0;
+    color: var(--muted);
+    font-size: 0.82rem;
+    line-height: 1.35;
+}
+
 .span-12 { grid-column: span 12; }
 .span-6 { grid-column: span 6; }
 .span-4 { grid-column: span 4; }
@@ -175,58 +234,89 @@
         <input type="hidden" name="event_id" value="<?= h($editEvent['id'] ?? '') ?>">
 
         <div class="event-field span-6">
-            <label class="form-label">Title</label>
-            <input class="form-control" name="title" value="<?= h($editEvent['title'] ?? '') ?>" required>
+            <label class="form-label event-label" for="event_title">
+                Title
+                <button type="button" class="field-help" data-help="Use a short and specific event name so students can identify it quickly." aria-label="Title help">?</button>
+            </label>
+            <input id="event_title" class="form-control" name="title" value="<?= h($editEvent['title'] ?? '') ?>" required>
         </div>
 
         <div class="event-field span-6">
-            <label class="form-label">Venue</label>
-            <input class="form-control" name="venue" value="<?= h($editEvent['venue'] ?? '') ?>" required>
+            <label class="form-label event-label" for="event_venue">
+                Venue
+                <button type="button" class="field-help" data-help="Enter the exact location where scanning or attendance will happen." aria-label="Venue help">?</button>
+            </label>
+            <input id="event_venue" class="form-control" name="venue" value="<?= h($editEvent['venue'] ?? '') ?>" required>
         </div>
 
         <div class="event-field span-12">
-            <label class="form-label">Description</label>
-            <textarea class="form-control" name="description" rows="4"><?= h($editEvent['description'] ?? '') ?></textarea>
+            <label class="form-label event-label" for="event_description">
+                Description
+                <button type="button" class="field-help" data-help="Optional details shown to users, such as reminders, attire, or required materials." aria-label="Description help">?</button>
+            </label>
+            <textarea id="event_description" class="form-control" name="description" rows="4"><?= h($editEvent['description'] ?? '') ?></textarea>
         </div>
 
         <div class="event-field span-3">
-            <label class="form-label">Event Date</label>
-            <input type="date" class="form-control" name="event_date" value="<?= h($editEvent['event_date'] ?? '') ?>" required>
+            <label class="form-label event-label" for="event_date">
+                Event Date
+                <button type="button" class="field-help" data-help="The calendar date when the event takes place." aria-label="Event date help">?</button>
+            </label>
+            <input id="event_date" type="date" class="form-control" name="event_date" value="<?= h($editEvent['event_date'] ?? '') ?>" required>
         </div>
 
         <div class="event-field span-3">
-            <label class="form-label">Start Time</label>
-            <input type="time" class="form-control" name="start_time" value="<?= h($editEvent['start_time'] ?? '08:00') ?>" required>
+            <label class="form-label event-label" for="event_start_time">
+                Start Time
+                <button type="button" class="field-help" data-help="Planned time the event starts. This helps staff coordinate gate operations." aria-label="Start time help">?</button>
+            </label>
+            <input id="event_start_time" type="time" class="form-control" name="start_time" value="<?= h($editEvent['start_time'] ?? '08:00') ?>" required>
         </div>
 
         <div class="event-field span-3">
-            <label class="form-label">End Time</label>
-            <input type="time" class="form-control" name="end_time" value="<?= h($editEvent['end_time'] ?? '17:00') ?>" required>
+            <label class="form-label event-label" for="event_end_time">
+                End Time
+                <button type="button" class="field-help" data-help="When the event is expected to finish. The system auto closes events after this time." aria-label="End time help">?</button>
+            </label>
+            <input id="event_end_time" type="time" class="form-control" name="end_time" value="<?= h($editEvent['end_time'] ?? '17:00') ?>" required>
         </div>
 
         <div class="event-field span-3">
-            <label class="form-label">Status</label>
-            <select class="form-select" name="status">
+            <label class="form-label event-label" for="event_status">
+                Status
+                <button type="button" class="field-help" data-help="Draft: internal only. Open: can accept tickets before start. Ongoing: gate/scanning is active. Closed: ended normally. Cancelled: event will not proceed." aria-label="Status help">?</button>
+            </label>
+            <select id="event_status" class="form-select" name="status">
                 <?php foreach (['draft', 'open', 'ongoing', 'closed', 'cancelled'] as $status): ?>
                     <option value="<?= h($status) ?>" <?= ($editEvent['status'] ?? 'draft') === $status ? 'selected' : '' ?>><?= h(ucfirst($status)) ?></option>
                 <?php endforeach; ?>
             </select>
+            <p class="field-note" id="eventStatusHelpText" aria-live="polite"></p>
         </div>
 
         <div class="event-field span-3" id="ticketPriceField" <?= $isFreeChecked ? 'hidden' : '' ?>>
-            <label class="form-label">Ticket Price</label>
+            <label class="form-label event-label" for="ticketPriceInput">
+                Ticket Price
+                <button type="button" class="field-help" data-help="Amount students pay per ticket. Hidden automatically when Free Event is enabled." aria-label="Ticket price help">?</button>
+            </label>
             <input type="number" step="0.01" min="0" class="form-control" id="ticketPriceInput" name="ticket_price" value="<?= h((string) ($editEvent['ticket_price'] ?? '')) ?>">
         </div>
 
         <div class="event-field span-3">
-            <label class="form-label">Max Capacity</label>
-            <input type="number" min="0" class="form-control" name="max_capacity" value="<?= h((string) ($editEvent['max_capacity'] ?? '')) ?>">
+            <label class="form-label event-label" for="event_max_capacity">
+                Max Capacity
+                <button type="button" class="field-help" data-help="Optional attendee limit. Leave blank if there is no fixed cap." aria-label="Max capacity help">?</button>
+            </label>
+            <input id="event_max_capacity" type="number" min="0" class="form-control" name="max_capacity" value="<?= h((string) ($editEvent['max_capacity'] ?? '')) ?>">
         </div>
 
         <div class="event-field span-6 event-check">
             <div class="form-check">
                 <input class="form-check-input" type="checkbox" name="is_free" id="is_free" <?= $isFreeChecked ? 'checked' : '' ?>>
-                <label class="form-check-label" for="is_free">Free Event</label>
+                <label class="form-check-label event-label" for="is_free">
+                    Free Event
+                    <button type="button" class="field-help" data-help="When enabled, the system sets ticket price to zero and hides the ticket price input." aria-label="Free event help">?</button>
+                </label>
             </div>
         </div>
 
@@ -246,6 +336,10 @@
             <thead><tr><th>Event</th><th>Date</th><th>Status</th><th>Tickets</th><th>Actions</th></tr></thead>
             <tbody>
             <?php foreach ($events as $event): ?>
+                <?php
+                $eventStatus = strtolower(trim((string) ($event['status'] ?? '')));
+                $canPrepareGate = ! event_has_ended($event) && ! in_array($eventStatus, ['closed', 'cancelled'], true);
+                ?>
                 <tr>
                     <td><strong><?= h($event['title']) ?></strong><div class="text-secondary"><?= h($event['venue']) ?></div></td>
                     <td><?= h($event['event_date']) ?><br><small class="text-secondary"><?= h(substr($event['start_time'], 0, 5) . ' - ' . substr($event['end_time'], 0, 5)) ?></small></td>
@@ -255,7 +349,9 @@
                         <div class="event-table-actions">
                             <a class="btn btn-outline-light btn-sm" href="<?= h(app_url('admin/events') . '?id=' . $event['id']) ?>">Edit</a>
                             <a class="btn btn-outline-light btn-sm" href="<?= h(app_url('admin/events/' . $event['id'] . '/activities')) ?>">Activities</a>
-                            <form method="POST"><input type="hidden" name="event_id" value="<?= $event['id'] ?>"><button class="btn btn-primary btn-sm" name="prepare_gate" value="1">Start Event & Prepare Gate</button></form>
+                            <?php if ($canPrepareGate): ?>
+                                <form method="POST"><input type="hidden" name="event_id" value="<?= h((string) $event['id']) ?>"><button class="btn btn-primary btn-sm" name="prepare_gate" value="1">Start Event & Prepare Gate</button></form>
+                            <?php endif; ?>
                             <button
                                 type="button"
                                 class="btn btn-danger btn-sm js-cancel-event"
@@ -301,9 +397,111 @@ document.querySelectorAll(".event-form textarea").forEach((textarea) => {
     textarea.addEventListener("input", resizeTextarea);
 });
 
+const helpButtons = Array.from(document.querySelectorAll(".field-help"));
+let activeHelpTooltip = null;
+const tooltipViewportGap = 12;
+
+const closeHelpTooltip = () => {
+    if (!activeHelpTooltip) {
+        return;
+    }
+
+    const { button, tooltip } = activeHelpTooltip;
+    button.removeAttribute("data-tooltip-active");
+    tooltip.remove();
+    activeHelpTooltip = null;
+};
+
+const positionHelpTooltip = (button, tooltip) => {
+    const buttonRect = button.getBoundingClientRect();
+    const tooltipRect = tooltip.getBoundingClientRect();
+
+    let left = buttonRect.left + (buttonRect.width / 2) - (tooltipRect.width / 2);
+    left = Math.max(tooltipViewportGap, Math.min(left, window.innerWidth - tooltipRect.width - tooltipViewportGap));
+
+    let top = buttonRect.bottom + 10;
+    if (top + tooltipRect.height > window.innerHeight - tooltipViewportGap) {
+        top = buttonRect.top - tooltipRect.height - 10;
+    }
+    if (top < tooltipViewportGap) {
+        top = Math.max(tooltipViewportGap, Math.min(top, window.innerHeight - tooltipRect.height - tooltipViewportGap));
+    }
+
+    tooltip.style.left = `${Math.round(left)}px`;
+    tooltip.style.top = `${Math.round(top)}px`;
+    tooltip.setAttribute("data-visible", "true");
+};
+
+const openHelpTooltip = (button) => {
+    const helpText = (button.getAttribute("data-help") || "").trim();
+    if (!helpText) {
+        return;
+    }
+
+    closeHelpTooltip();
+
+    const tooltip = document.createElement("div");
+    tooltip.className = "field-help-tooltip";
+    tooltip.setAttribute("role", "tooltip");
+    tooltip.textContent = helpText;
+    document.body.appendChild(tooltip);
+
+    button.setAttribute("data-tooltip-active", "true");
+    activeHelpTooltip = { button, tooltip };
+    positionHelpTooltip(button, tooltip);
+};
+
+helpButtons.forEach((helpButton) => {
+    helpButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+    });
+
+    helpButton.addEventListener("mouseenter", () => {
+        openHelpTooltip(helpButton);
+    });
+    helpButton.addEventListener("focus", () => {
+        openHelpTooltip(helpButton);
+    });
+    helpButton.addEventListener("mouseleave", closeHelpTooltip);
+    helpButton.addEventListener("blur", closeHelpTooltip);
+});
+
+window.addEventListener("scroll", () => {
+    if (activeHelpTooltip) {
+        positionHelpTooltip(activeHelpTooltip.button, activeHelpTooltip.tooltip);
+    }
+}, true);
+
+window.addEventListener("resize", () => {
+    if (activeHelpTooltip) {
+        positionHelpTooltip(activeHelpTooltip.button, activeHelpTooltip.tooltip);
+    }
+});
+
 const freeEventCheckbox = document.getElementById("is_free");
 const ticketPriceField = document.getElementById("ticketPriceField");
 const ticketPriceInput = document.getElementById("ticketPriceInput");
+const eventStatusSelect = document.getElementById("event_status");
+const eventStatusHelpText = document.getElementById("eventStatusHelpText");
+
+if (eventStatusSelect && eventStatusHelpText) {
+    const statusHelpMap = {
+        draft: "Draft: event is still being prepared and should not be treated as active.",
+        open: "Open: event is published and can accept tickets before the gate starts.",
+        ongoing: "Ongoing: event is currently running and gate scanning should be active.",
+        closed: "Closed: event already ended and no more gate operations should occur.",
+        cancelled: "Cancelled: event was stopped and should not continue."
+    };
+
+    const syncStatusHelp = () => {
+        const selectedStatus = (eventStatusSelect.value || "").toLowerCase().trim();
+        eventStatusHelpText.textContent = statusHelpMap[selectedStatus] || "";
+    };
+
+    eventStatusSelect.addEventListener("change", syncStatusHelp);
+    syncStatusHelp();
+}
 
 if (freeEventCheckbox && ticketPriceField) {
     const syncTicketPriceVisibility = () => {
@@ -373,6 +571,7 @@ if (eventCancelKeep) {
 
 document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
+        closeHelpTooltip();
         closeEventCancelModal();
     }
 });

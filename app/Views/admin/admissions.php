@@ -8,14 +8,21 @@ if ($statusFilter !== '') {
     $admissionExportParams['status'] = $statusFilter;
 }
 $admissionExportParams['export'] = 'csv';
+$exportError = session()->getFlashdata('export_error');
+$hasAdmissionRows = $logs !== [];
 ?>
+<?php if ($exportError !== null && $exportError !== ''): ?><div class="alert alert-danger"><?= h((string) $exportError) ?></div><?php endif; ?>
 <div class="panel">
     <form method="GET" class="filter-form">
         <div class="filter-field filter-span-4"><label class="form-label">Event</label><select class="form-select" name="event_id"><option value="">All events</option><?php foreach ($events as $event): ?><option value="<?= $event['id'] ?>" <?= $eventFilter === (int) $event['id'] ? 'selected' : '' ?>><?= h($event['title']) ?></option><?php endforeach; ?></select></div>
         <div class="filter-field filter-span-4"><label class="form-label">Status</label><select class="form-select" name="status"><option value="">All statuses</option><?php foreach (['in', 'out', 'admitted', 'duplicate', 'rejected'] as $status): ?><option value="<?= h($status) ?>" <?= $statusFilter === $status ? 'selected' : '' ?>><?= h(admission_status_label($status)) ?></option><?php endforeach; ?></select></div>
         <div class="filter-field filter-span-4 filter-actions d-flex gap-2">
             <button class="btn btn-primary">Apply Filters</button>
-            <a class="btn btn-outline-light" href="<?= h(app_url('admin/admissions?' . http_build_query($admissionExportParams))) ?>">Export CSV</a>
+            <?php if ($hasAdmissionRows): ?>
+                <a class="btn btn-outline-light" href="<?= h(app_url('admin/admissions?' . http_build_query($admissionExportParams))) ?>">Export CSV</a>
+            <?php else: ?>
+                <button type="button" class="btn btn-outline-light" disabled title="No data to export">Export CSV</button>
+            <?php endif; ?>
         </div>
     </form>
 </div>
@@ -68,7 +75,11 @@ async function syncAdminGateActivity() {
         }
 
         if (adminGateActivityStateHash !== "" && data.state_hash !== adminGateActivityStateHash) {
-            window.location.reload();
+            if (window.SentryLinkShell && typeof window.SentryLinkShell.refreshCurrentPage === "function") {
+                window.SentryLinkShell.refreshCurrentPage();
+            } else {
+                window.location.reload();
+            }
             return;
         }
 
