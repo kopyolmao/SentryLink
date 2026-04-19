@@ -126,12 +126,8 @@ class AdminController extends BaseController
                     $eventId = (int) $this->request->getPost('event_id');
                     $this->execute('UPDATE events SET deleted_at = NOW(), status = ? WHERE id = ?', ['cancelled', $eventId]);
                     $this->execute(
-                        "UPDATE tickets
-                         SET deleted_at = NOW(),
-                             payment_status = 'cancelled',
-                             updated_at = NOW()
-                         WHERE event_id = ?
-                           AND deleted_at IS NULL",
+                        "DELETE FROM tickets
+                         WHERE event_id = ?",
                         [$eventId]
                     );
                     $this->portal->auditLog((int) $this->user['id'], 'EVENT_CANCELLED', 'event', $eventId);

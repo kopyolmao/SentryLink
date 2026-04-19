@@ -107,31 +107,21 @@ abstract class BaseController extends Controller
 
     protected function cleanupTicketsForRemovedEvents(): void
     {
-        $now = $this->appNow()->format('Y-m-d H:i:s');
-
         try {
-            // Remove active tickets tied to soft-deleted events.
+            // Hard-delete tickets tied to soft-deleted events.
             $this->db->query(
-                "UPDATE tickets t
+                "DELETE t
+                 FROM tickets t
                  INNER JOIN events e ON e.id = t.event_id
-                 SET t.deleted_at = ?,
-                     t.payment_status = 'cancelled',
-                     t.updated_at = ?
-                 WHERE t.deleted_at IS NULL
-                   AND e.deleted_at IS NOT NULL",
-                [$now, $now]
+                 WHERE e.deleted_at IS NOT NULL"
             );
 
             // Safety net for orphan records if an event was physically removed without cascade.
             $this->db->query(
-                "UPDATE tickets t
+                "DELETE t
+                 FROM tickets t
                  LEFT JOIN events e ON e.id = t.event_id
-                 SET t.deleted_at = ?,
-                     t.payment_status = 'cancelled',
-                     t.updated_at = ?
-                 WHERE t.deleted_at IS NULL
-                   AND e.id IS NULL",
-                [$now, $now]
+                 WHERE e.id IS NULL"
             );
         } catch (DatabaseException $e) {
             log_message('error', 'Database unavailable while cleaning tickets for removed events: {message}', [
