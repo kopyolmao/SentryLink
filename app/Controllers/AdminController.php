@@ -71,6 +71,31 @@ class AdminController extends BaseController
                     }
 
                     if ($eventId > 0) {
+                        $existingEvent = $this->fetchOne(
+                            'SELECT id, is_free, deleted_at FROM events WHERE id = ? LIMIT 1',
+                            [$eventId]
+                        );
+
+                        if (! $existingEvent || ! empty($existingEvent['deleted_at'])) {
+                            throw new \RuntimeException('Event not found.');
+                        }
+
+                        $currentIsFree = (int) ($existingEvent['is_free'] ?? 0);
+                        if ($currentIsFree !== $isFree) {
+                            $existingOperationalData = (int) $this->scalar(
+                                "SELECT (
+                                    (SELECT COUNT(*) FROM tickets WHERE event_id = ? AND deleted_at IS NULL) +
+                                    (SELECT COUNT(*) FROM admissions WHERE event_id = ?) +
+                                    (SELECT COUNT(*) FROM event_attendee_cache WHERE event_id = ?)
+                                ) AS total_count",
+                                [$eventId, $eventId, $eventId]
+                            );
+
+                            if ($existingOperationalData > 0) {
+                                throw new \RuntimeException('Cannot switch this event between free and paid after tickets or QR gate records already exist. Create a new event instead.');
+                            }
+                        }
+
                         $this->execute(
                             "UPDATE events
                              SET title = ?, description = ?, venue = ?, event_date = ?, start_time = ?, end_time = ?,
