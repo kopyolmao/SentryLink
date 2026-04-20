@@ -108,6 +108,10 @@ if (! function_exists('shell_nav_items')) {
                 'audit'      => ['Audit Logs', app_url('director/audit-logs')],
                 'settings'   => ['Settings', app_url('director/settings')],
             ],
+            'cashier' => [
+                'dashboard' => ['Dashboard', app_url('cashier/dashboard')],
+                'settings'  => ['Settings', app_url('cashier/settings')],
+            ],
             default => [],
         };
     }
@@ -121,6 +125,7 @@ if (! function_exists('shell_role_label')) {
             'ssg'      => 'Officer',
             'admin'    => 'Admin',
             'director' => 'Director',
+            'cashier'  => 'Cashier',
             default    => ucfirst($role),
         };
     }
@@ -134,6 +139,7 @@ if (! function_exists('shell_accent')) {
             'ssg'      => '#0f8b8d',
             'admin'    => '#9d4edd',
             'director' => '#0f8b8d',
+            'cashier'  => '#d14f27',
             default    => '#1f66d1',
         };
     }
@@ -149,6 +155,7 @@ if (! function_exists('shell_start')) {
             'ssg'      => app_url('o/auth/logout'),
             'admin'    => app_url('admin/auth/logout'),
             'director' => app_url('director/auth/logout'),
+            'cashier'  => app_url('cashier/auth/logout'),
             default    => app_url('logout'),
         };
         $userPhotoPath = trim((string) ($user['profile_photo'] ?? ''));

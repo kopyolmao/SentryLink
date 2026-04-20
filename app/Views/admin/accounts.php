@@ -1,4 +1,4 @@
-<?php shell_start('SentryLink | Accounts', $user, 'admin', 'admins', 'Admin and Officer Accounts', 'Create or activate staff accounts.'); ?>
+<?php shell_start('SentryLink | Accounts', $user, 'admin', 'admins', 'Staff Accounts', 'Create or activate admin, officer, and cashier accounts.'); ?>
 <style>
 .staff-layout {
     display: flex;
@@ -82,7 +82,7 @@
 <?php if ($error !== ''): ?><div class="alert alert-danger"><?= h($error) ?></div><?php endif; ?>
 <div class="panel">
     <h3 class="h5 mb-2">Create Staff Account</h3>
-    <div class="staff-copy">Create an officer or admin account with the assigned ID, email, and a temporary password.</div>
+    <div class="staff-copy">Create an admin, officer, or cashier account with the assigned ID, email, and a temporary password.</div>
     <form method="POST" class="staff-form">
         <div class="staff-field span-3">
             <label class="form-label">Account ID</label>
@@ -93,6 +93,7 @@
             <select class="form-select" name="role">
                 <option value="ssg" <?= old('role') === 'ssg' || old('role') === '' ? 'selected' : '' ?>>Officer</option>
                 <option value="admin" <?= old('role') === 'admin' ? 'selected' : '' ?>>Admin</option>
+                <option value="cashier" <?= old('role') === 'cashier' ? 'selected' : '' ?>>Cashier</option>
             </select>
         </div>
         <div class="staff-field span-6">
@@ -132,7 +133,7 @@
                 <tr>
                     <td><?= h($account['first_name'] . ' ' . $account['last_name']) ?><br><small class="text-secondary"><?= h($account['student_id']) ?></small></td>
                     <td><?= h($account['email']) ?></td>
-                    <td><?= h(ucfirst($account['role'])) ?></td>
+                    <td><?= h(shell_role_label((string) ($account['role'] ?? ''))) ?></td>
                     <td><span class="badge text-bg-<?= (int) $account['is_active'] === 1 ? 'success' : 'secondary' ?>"><?= (int) $account['is_active'] === 1 ? 'Active' : 'Inactive' ?></span></td>
                     <td><form method="POST"><input type="hidden" name="target_id" value="<?= $account['id'] ?>"><button class="btn btn-outline-light btn-sm" name="toggle_active" value="1"><?= (int) $account['is_active'] === 1 ? 'Deactivate' : 'Activate' ?></button></form></td>
                 </tr>

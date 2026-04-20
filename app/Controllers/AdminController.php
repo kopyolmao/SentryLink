@@ -590,16 +590,21 @@ class AdminController extends BaseController
                         throw new \RuntimeException(implode(' ', $policyErrors));
                     }
 
+                    $staffRole = strtolower(trim((string) ($this->request->getPost('role') ?? 'ssg')));
+                    if (! in_array($staffRole, ['admin', 'ssg', 'cashier'], true)) {
+                        throw new \RuntimeException('Select a valid staff role.');
+                    }
+
                     $this->execute(
                         "INSERT INTO users (student_id, first_name, last_name, email, password_hash, role, email_verified, created_at, updated_at)
                          VALUES (?, ?, ?, ?, ?, ?, 1, NOW(), NOW())",
                         [
-                            trim((string) $this->request->getPost('account_id')),
-                            trim((string) $this->request->getPost('first_name')),
-                            trim((string) $this->request->getPost('last_name')),
-                            trim((string) $this->request->getPost('email')),
+                            $this->portal->sanitizePlainInput((string) $this->request->getPost('account_id'), 20),
+                            $this->portal->sanitizeNameInput((string) $this->request->getPost('first_name'), 100),
+                            $this->portal->sanitizeNameInput((string) $this->request->getPost('last_name'), 100),
+                            $this->portal->sanitizeEmailInput((string) $this->request->getPost('email')),
                             password_hash($password, PASSWORD_BCRYPT),
-                            (string) ($this->request->getPost('role') ?? 'ssg'),
+                            $staffRole,
                         ]
                     );
                     $this->portal->auditLog((int) $this->user['id'], 'STAFF_ACCOUNT_CREATED', 'user', (int) $this->db->insertID());
@@ -624,7 +629,7 @@ class AdminController extends BaseController
                     $target = $this->fetchOne(
                         "SELECT id, first_name, last_name, student_id, role
                          FROM users
-                         WHERE id = ? AND role IN ('admin', 'ssg') AND deleted_at IS NULL
+                         WHERE id = ? AND role IN ('admin', 'ssg', 'cashier') AND deleted_at IS NULL
                          LIMIT 1",
                         [$targetId]
                     );
@@ -661,7 +666,7 @@ class AdminController extends BaseController
             }
         }
 
-        $accounts = $this->fetchAll("SELECT * FROM users WHERE role IN ('admin','ssg') AND deleted_at IS NULL ORDER BY role ASC, last_name ASC");
+        $accounts = $this->fetchAll("SELECT * FROM users WHERE role IN ('admin','ssg','cashier') AND deleted_at IS NULL ORDER BY role ASC, last_name ASC");
 
         return view('admin/accounts', compact('message', 'error', 'accounts') + ['user' => $this->user]);
     }

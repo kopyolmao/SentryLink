@@ -13,7 +13,7 @@ SET @users_exists := (
 
 SET @sql := IF(
     @users_exists = 1,
-    "ALTER TABLE `users` MODIFY COLUMN `role` ENUM('student','ssg','admin','director') NOT NULL DEFAULT 'student'",
+    "ALTER TABLE `users` MODIFY COLUMN `role` ENUM('student','ssg','admin','director','cashier') NOT NULL DEFAULT 'student'",
     "SELECT 1"
 );
 PREPARE stmt FROM @sql;

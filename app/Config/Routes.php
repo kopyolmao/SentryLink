@@ -6,12 +6,12 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 $routes->get('/', 'Home::index');
-$routes->get('dashboard', 'Home::index', ['filter' => 'role:student,ssg,admin,director']);
+$routes->get('dashboard', 'Home::index', ['filter' => 'role:student,ssg,admin,director,cashier']);
 $routes->get('login', static fn () => redirect()->to(site_url('s/auth/login')));
 $routes->get('logout', static fn () => redirect()->to(site_url('s/auth/logout')));
 $routes->get('forgot-password', static fn () => redirect()->to(site_url('s/auth/forgot-password')));
 $routes->post('auth/login-captcha-refresh', 'AuthController::refreshLoginCaptcha', ['filter' => 'guest']);
-$routes->post('auth/password-reset-captcha-refresh', 'AuthController::refreshPasswordResetCaptcha', ['filter' => 'role:student,ssg,admin,director']);
+$routes->post('auth/password-reset-captcha-refresh', 'AuthController::refreshPasswordResetCaptcha', ['filter' => 'role:student,ssg,admin,director,cashier']);
 
 // Legacy plain-PHP entry points
 $routes->get('login.php', static fn () => redirect()->to(site_url('s/auth/login')));
@@ -99,6 +99,18 @@ $routes->group('director', static function ($routes): void {
     $routes->get('reports', 'DirectorController::reports', ['filter' => 'role:director']);
     $routes->get('audit-logs', 'DirectorController::auditLogs', ['filter' => 'role:director']);
     $routes->match(['GET', 'POST'], 'settings', 'DirectorController::settings', ['filter' => 'role:director']);
+});
+
+$routes->group('cashier', static function ($routes): void {
+    $routes->get('/', static fn () => redirect()->to(site_url('cashier/dashboard')));
+    $routes->get('auth/login', 'AuthController::cashierLogin', ['filter' => 'guest']);
+    $routes->post('auth/login', 'AuthController::cashierLoginPost', ['filter' => 'guest']);
+    $routes->match(['GET', 'POST'], 'auth/forgot-password', 'AuthController::forgotPassword/cashier', ['filter' => 'guest']);
+    $routes->match(['GET', 'POST'], 'auth/reset-password/(:segment)', 'AuthController::resetPassword/cashier/$1', ['filter' => 'guest']);
+    $routes->get('auth/logout', 'AuthController::logout');
+
+    $routes->match(['GET', 'POST'], 'dashboard', 'CashierController::dashboard', ['filter' => 'role:cashier']);
+    $routes->match(['GET', 'POST'], 'settings', 'CashierController::settings', ['filter' => 'role:cashier']);
 });
 
 $routes->group('api', static function ($routes): void {

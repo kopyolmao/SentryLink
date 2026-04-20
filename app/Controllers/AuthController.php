@@ -114,6 +114,33 @@ class AuthController extends BaseController
         return $this->handleLogin(['director']);
     }
 
+    public function cashierLogin()
+    {
+        $modalState = $this->resolveLoginCaptchaModalState(['cashier']);
+
+        return view('auth/login', $this->buildLoginViewData([
+            'title'       => 'SentryLink | Cashier Login',
+            'badge'       => 'Cashier Login',
+            'portalLabel' => 'Cashier',
+            'heroBadge'   => 'Payments',
+            'heroTitle'   => 'SentryLink',
+            'heroText'    => 'Cashier access for direct paid ticket encoding without CSV uploads.',
+            'submitLabel' => 'Open Cashier Portal',
+            'actionUrl'   => app_url('cashier/auth/login'),
+            'forgotUrl'   => app_url('cashier/auth/forgot-password'),
+            'error'       => session()->getFlashdata('error') ?? '',
+            'showCaptchaModal' => $modalState['show'],
+            'pendingLoginEmail' => $modalState['email'],
+            'pendingLoginRole'  => 'cashier',
+            'captchaRefreshUrl' => app_url('auth/login-captcha-refresh'),
+        ], $modalState['show']));
+    }
+
+    public function cashierLoginPost()
+    {
+        return $this->handleLogin(['cashier']);
+    }
+
     public function forgotPassword(string $role = 'student')
     {
         $roleConfig = [
@@ -121,6 +148,7 @@ class AuthController extends BaseController
             'ssg'      => ['label' => 'Officer', 'accent' => '#0f8b8d'],
             'admin'    => ['label' => 'Admin', 'accent' => '#9d4edd'],
             'director' => ['label' => 'Director', 'accent' => '#0f8b8d'],
+            'cashier'  => ['label' => 'Cashier', 'accent' => '#d14f27'],
         ];
 
         if (! isset($roleConfig[$role])) {
@@ -169,6 +197,7 @@ class AuthController extends BaseController
             'ssg'      => ['label' => 'Officer', 'accent' => '#0f8b8d', 'login' => 'o/auth/login'],
             'admin'    => ['label' => 'Admin', 'accent' => '#9d4edd', 'login' => 'admin/auth/login'],
             'director' => ['label' => 'Director', 'accent' => '#0f8b8d', 'login' => 'director/auth/login'],
+            'cashier'  => ['label' => 'Cashier', 'accent' => '#d14f27', 'login' => 'cashier/auth/login'],
         ];
 
         if (! isset($roleConfig[$role])) {
@@ -315,7 +344,7 @@ class AuthController extends BaseController
             default   => $role,
         };
 
-        if (! in_array($role, ['student', 'ssg', 'admin', 'director'], true)) {
+        if (! in_array($role, ['student', 'ssg', 'admin', 'director', 'cashier'], true)) {
             return $this->response->setStatusCode(422)->setJSON([
                 'ok'      => false,
                 'message' => 'Invalid login role.',

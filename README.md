@@ -4,9 +4,9 @@ SentryLink is a CodeIgniter 4 school event ticketing and gate-monitoring system 
 
 ## Main Features
 
-- Role-based login for students, officers, admins, and directors
+- Role-based login for students, officers, cashiers, admins, and directors
 - Admin event management, activity setup, student records, ticket records, and reports
-- CSV receipt import for paid ticket generation
+- Paid ticket generation via cashier direct encoding or CSV receipt import
 - Student dashboard, tickets, notifications, profile, password settings, and live QR page
 - Officer gate scanner, manual lookup, gate logs, and offline sync support
 - Director monitoring dashboards, admissions, audit logs, events, and reports

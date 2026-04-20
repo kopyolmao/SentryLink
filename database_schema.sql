@@ -247,7 +247,7 @@ CREATE TABLE `users` (
   `password_hash` varchar(255) NOT NULL,
   `session_token` varchar(64) DEFAULT NULL,
   `session_last_seen_at` datetime DEFAULT NULL,
-  `role` enum('student','ssg','admin','director') NOT NULL DEFAULT 'student',
+  `role` enum('student','ssg','admin','director','cashier') NOT NULL DEFAULT 'student',
   `house` varchar(100) DEFAULT NULL,
   `year_level` varchar(50) DEFAULT NULL,
   `course` varchar(100) DEFAULT NULL,

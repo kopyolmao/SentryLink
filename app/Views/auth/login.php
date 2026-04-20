@@ -335,6 +335,7 @@ $headline = match ($normalizedPortal) {
     'officer'  => 'Officer access for live gate validation.',
     'admin'    => 'Administrative access for events and reports.',
     'director' => 'Director access for oversight and audit visibility.',
+    'cashier'  => 'Cashier access for direct paid ticket encoding.',
     default    => 'Secure access for the SentryLink platform.',
 };
 
@@ -343,6 +344,7 @@ $supportingText = match ($normalizedPortal) {
     'officer'  => 'Sign in to open the scanner, validate admissions, and monitor gate activity in real time.',
     'admin'    => 'Sign in to manage events, ticket imports, admissions, and operational reporting.',
     'director' => 'Sign in to review event outcomes, admissions, and audit trails from a leadership view.',
+    'cashier'  => 'Sign in to encode paid student receipts directly into the system without CSV handling.',
     default    => 'Use your verified account credentials to continue into the SentryLink system.',
 };
 
@@ -351,6 +353,7 @@ $portalNotice = match ($normalizedPortal) {
     'officer'  => 'Only provisioned gate officers should use this portal. Use the email bound to your officer account for recovery.',
     'admin'    => 'This portal is for event operations staff. Sign in only with the admin account assigned to you.',
     'director' => 'This portal is reserved for leadership review access. Use your assigned director account credentials.',
+    'cashier'  => 'This portal is for authorized cashier accounts that encode paid event receipts.',
     default    => 'Use the credentials assigned to your account for this portal.',
 };
 

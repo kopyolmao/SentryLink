@@ -214,6 +214,17 @@ class RepairSystem extends BaseCommand
                 'year_level' => '',
                 'house'      => '',
             ],
+            [
+                'id'         => 8,
+                'student_id' => 'CASH001',
+                'first_name' => 'Campus',
+                'last_name'  => 'Cashier',
+                'email'      => 'cashier@aclc.edu',
+                'role'       => 'cashier',
+                'course'     => '',
+                'year_level' => '',
+                'house'      => '',
+            ],
         ];
     }
 }

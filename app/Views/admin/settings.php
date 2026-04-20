@@ -15,7 +15,7 @@
     <ul class="list-soft">
         <li>QR grace window: 5 seconds</li>
         <li>Student QR refresh interval: 10 seconds</li>
-        <li>Authentication roles enabled: student, officer, admin, director</li>
+        <li>Authentication roles enabled: student, officer, admin, director, cashier</li>
         <li>Base URL is auto-detected so the app works on the local network.</li>
     </ul>
 </div>

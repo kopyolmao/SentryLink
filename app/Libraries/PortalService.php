@@ -27,6 +27,7 @@ class PortalService
             'ssg'      => 'o/scanner',
             'admin'    => 'admin/dashboard',
             'director' => 'director/dashboard',
+            'cashier'  => 'cashier/dashboard',
             default    => 's/auth/login',
         };
     }
@@ -38,6 +39,7 @@ class PortalService
             'ssg'      => 'o/auth/login',
             'admin'    => 'admin/auth/login',
             'director' => 'director/auth/login',
+            'cashier'  => 'cashier/auth/login',
             default    => 's/auth/login',
         };
     }
@@ -49,6 +51,7 @@ class PortalService
             'ssg'      => 'Officer',
             'admin'    => 'Admin',
             'director' => 'Director',
+            'cashier'  => 'Cashier',
             default    => ucfirst($role),
         };
     }
@@ -715,6 +718,7 @@ class PortalService
             'ssg'      => 'o/auth/reset-password/' . $token,
             'admin'    => 'admin/auth/reset-password/' . $token,
             'director' => 'director/auth/reset-password/' . $token,
+            'cashier'  => 'cashier/auth/reset-password/' . $token,
             default    => 's/auth/reset-password/' . $token,
         };
     }
