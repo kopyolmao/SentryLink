@@ -524,6 +524,7 @@ class PortalService
                      WHERE u.role = 'student'
                        AND u.deleted_at IS NULL
                        AND u.is_active = 1
+                       AND u.email_verified = 1
                        AND t.id IS NULL
                      ORDER BY u.id ASC",
                     [$eventId]
