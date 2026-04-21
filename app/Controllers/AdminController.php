@@ -29,8 +29,8 @@ class AdminController extends BaseController
 
     public function events(): string
     {
-        $message = '';
-        $error   = '';
+        $message = (string) (session()->getFlashdata('message') ?? '');
+        $error   = (string) (session()->getFlashdata('error') ?? '');
         $editId  = (int) ($this->request->getGet('id') ?? 0);
         $now     = $this->appNow();
 
@@ -157,13 +157,19 @@ class AdminController extends BaseController
                     );
                     $this->portal->auditLog((int) $this->user['id'], 'EVENT_CANCELLED', 'event', $eventId);
                     $message = 'Event cancelled.';
+
+                    if ($eventId > 0 && $editId === $eventId) {
+                        return redirect()->to(app_url('admin/events'))->with('message', $message);
+                    }
                 }
             } catch (\Throwable $e) {
                 $error = $e->getMessage();
             }
         }
 
-        $editEvent = $editId > 0 ? $this->fetchOne('SELECT * FROM events WHERE id = ?', [$editId]) : null;
+        $editEvent = $editId > 0
+            ? $this->fetchOne('SELECT * FROM events WHERE id = ? AND deleted_at IS NULL', [$editId])
+            : null;
         $events    = $this->fetchAll(
             "SELECT e.*,
                     (SELECT COUNT(*) FROM tickets t WHERE t.event_id = e.id AND t.deleted_at IS NULL) AS ticket_count
