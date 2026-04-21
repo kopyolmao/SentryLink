@@ -412,12 +412,13 @@ class AuthController extends BaseController
 
     private function handleLogin(array $allowedRoles)
     {
+        $returnUrl = current_url();
         $captchaStep = strtolower(trim((string) $this->request->getPost('captcha_step')));
 
         if ($captchaStep === 'cancel') {
             $this->clearPendingLogin();
 
-            return redirect()->back();
+            return redirect()->to($returnUrl);
         }
 
         if ($captchaStep === 'verify') {
@@ -425,14 +426,14 @@ class AuthController extends BaseController
             if ($pendingLogin === null) {
                 session()->setFlashdata('error', 'Login session expired. Please enter your credentials again.');
 
-                return redirect()->back();
+                return redirect()->to($returnUrl);
             }
 
             $captchaError = $this->verifyLoginCaptcha();
             if ($captchaError !== null) {
                 session()->setFlashdata('error', $captchaError);
 
-                return redirect()->back();
+                return redirect()->to($returnUrl);
             }
 
             $this->clearPendingLogin();
@@ -445,7 +446,7 @@ class AuthController extends BaseController
 
             session()->setFlashdata('error', $result['message']);
 
-            return redirect()->back()->withInput();
+            return redirect()->to($returnUrl)->withInput();
         }
 
         $email    = $this->portal->sanitizeEmailInput((string) $this->request->getPost('email'));
@@ -465,7 +466,7 @@ class AuthController extends BaseController
 
         $this->setPendingLogin($email, $password, $allowedRoles);
 
-        return redirect()->back()->withInput();
+        return redirect()->to($returnUrl)->withInput();
     }
 
     private function buildLoginViewData(array $data, bool $captchaRequired = false): array
