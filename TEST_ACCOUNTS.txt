@@ -27,6 +27,11 @@ These accounts are for testing the system. Password for all accounts: "Password1
 |-------|-------------|------------|-----------|---------------------------|
 | 2     | DIR001     | School     | Director  | director@aclc.edu        |
 
+--- CASHIER ACCOUNT ---
+| ID    | Cashier ID  | First Name | Last Name | Email                     |
+|-------|-------------|------------|-----------|---------------------------|
+| 8     | CASH001     | Campus     | Cashier   | cashier@aclc.edu         |
+
 ====================================================
 INSTRUCTIONS
 ====================================================
@@ -45,6 +50,7 @@ INSTRUCTIONS
    - Student login: http://localhost/syntrelink/login.php
    - Officer login: http://localhost/syntrelink/officers/loginofficers.php
    - Admin login:  http://localhost/syntrelink/loginadmin.php
-   - Director:    Use admin login with director credentials
+   - Director login: http://localhost/syntrelink/director/auth/login
+   - Cashier login: http://localhost/syntrelink/cashier/auth/login
 
 ====================================================
