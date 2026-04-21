@@ -6,6 +6,7 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 $routes->get('/', 'Home::index');
+$routes->get('system-logo', 'Home::systemLogo');
 $routes->get('dashboard', 'Home::index', ['filter' => 'role:student,ssg,admin,director,cashier']);
 $routes->get('login', static fn () => redirect()->to(site_url('s/auth/login')));
 $routes->get('logout', static fn () => redirect()->to(site_url('s/auth/logout')));

@@ -15,4 +15,23 @@ class Home extends BaseController
 
         return redirect()->to(site_url('s/auth/login'));
     }
+
+    public function systemLogo()
+    {
+        $logoPath = ROOTPATH . 'Logo.html';
+
+        if (! is_file($logoPath)) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        $content = file_get_contents($logoPath);
+        if ($content === false) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        return $this->response
+            ->setHeader('X-Robots-Tag', 'noindex, nofollow')
+            ->setContentType('text/html', 'UTF-8')
+            ->setBody($content);
+    }
 }

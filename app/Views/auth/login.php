@@ -158,6 +158,27 @@ html.page-loading .viewport-shell {
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
+.system-logo-badge {
+    width: 2.75rem;
+    height: 2.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+    border-radius: 999px;
+    border: 1px solid rgba(204, 189, 255, 0.4);
+    box-shadow: 0 10px 28px rgba(91, 25, 230, 0.28);
+}
+
+.system-logo-badge iframe {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border: 0;
+    pointer-events: none;
+}
+
 .viewport-shell {
     min-height: 100vh;
     min-height: 100dvh;
@@ -285,6 +306,11 @@ html.page-loading .viewport-shell {
 }
 
 @media (max-width: 1023px) {
+    .system-logo-badge {
+        width: 2.3rem;
+        height: 2.3rem;
+    }
+
     .auth-panel {
         padding-top: 4.5rem;
         padding-bottom: 1rem;
@@ -361,6 +387,7 @@ $portalNotice = match ($normalizedPortal) {
 
 $passwordFieldId = 'password-input';
 $heroSystemTitle = trim((string) ($heroTitle ?? '')) !== '' ? (string) $heroTitle : 'SentryLink';
+$systemLogoUrl = site_url('system-logo');
 ?>
 <div class="fixed inset-0 pointer-events-none vanguard-glow"></div>
 <div class="fixed inset-0 pointer-events-none blueprint-grid"></div>
@@ -369,9 +396,9 @@ $heroSystemTitle = trim((string) ($heroTitle ?? '')) !== '' ? (string) $heroTitl
         <div class="absolute -top-20 -left-20 h-96 w-96 rounded-full bg-primary-container/20 blur-[120px]"></div>
         <div class="relative z-10 animate-fade-in-up">
             <div class="flex items-center gap-3">
-                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-primary-container to-primary shadow-lg shadow-primary-container/20">
-                    <span class="material-symbols-outlined text-xl text-on-primary" style="font-variation-settings: 'FILL' 1;">security</span>
-                </div>
+                <span class="system-logo-badge" aria-hidden="true">
+                    <iframe src="<?= h($systemLogoUrl) ?>" loading="lazy" tabindex="-1" title="SentryLink system logo"></iframe>
+                </span>
                 <span class="headline text-3xl font-light italic tracking-tight text-on-surface">SentryLink</span>
             </div>
             <div class="mt-4 h-px w-24 bg-gradient-to-r from-primary/40 to-transparent"></div>
@@ -403,6 +430,9 @@ $heroSystemTitle = trim((string) ($heroTitle ?? '')) !== '' ? (string) $heroTitl
 
     <section class="auth-panel relative z-20">
         <div class="absolute left-5 top-5 flex items-center gap-2 animate-fade-in-up lg:hidden">
+            <span class="system-logo-badge" aria-hidden="true">
+                <iframe src="<?= h($systemLogoUrl) ?>" loading="lazy" tabindex="-1" title="SentryLink system logo"></iframe>
+            </span>
             <span class="headline text-2xl font-light italic text-on-surface">SentryLink</span>
         </div>
 
