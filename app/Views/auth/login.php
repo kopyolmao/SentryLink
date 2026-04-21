@@ -177,6 +177,8 @@ html.page-loading .viewport-shell {
     display: block;
     border: 0;
     pointer-events: none;
+    transform: scale(1.28);
+    transform-origin: center;
 }
 
 .viewport-shell {
