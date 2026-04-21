@@ -80,12 +80,17 @@ class AdminController extends BaseController
 
                     if ($eventId > 0) {
                         $existingEvent = $this->fetchOne(
-                            'SELECT id, is_free, deleted_at FROM events WHERE id = ? LIMIT 1',
+                            'SELECT id, is_free, status, deleted_at FROM events WHERE id = ? LIMIT 1',
                             [$eventId]
                         );
 
                         if (! $existingEvent || ! empty($existingEvent['deleted_at'])) {
                             throw new \RuntimeException('Event not found.');
+                        }
+
+                        $currentStatus = strtolower(trim((string) ($existingEvent['status'] ?? 'draft')));
+                        if (in_array($currentStatus, ['open', 'ongoing'], true)) {
+                            throw new \RuntimeException('Editing is disabled when an event is already open or ongoing.');
                         }
 
                         $currentIsFree = (int) ($existingEvent['is_free'] ?? 0);
@@ -170,6 +175,38 @@ class AdminController extends BaseController
                         return redirect()->to(app_url('admin/events'))->with('message', $message);
                     }
                 }
+
+                if ($this->request->getPost('archive_event')) {
+                    $eventId = (int) $this->request->getPost('event_id');
+                    if ($eventId <= 0) {
+                        throw new \RuntimeException('Select a valid event to archive.');
+                    }
+
+                    $event = $this->fetchOne(
+                        'SELECT id, title, status, deleted_at FROM events WHERE id = ? LIMIT 1',
+                        [$eventId]
+                    );
+
+                    if (! $event || ! empty($event['deleted_at'])) {
+                        throw new \RuntimeException('Event not found or already archived.');
+                    }
+
+                    $eventStatus = strtolower(trim((string) ($event['status'] ?? '')));
+                    if (in_array($eventStatus, ['open', 'ongoing'], true)) {
+                        throw new \RuntimeException('Cannot archive an event while it is open or ongoing.');
+                    }
+
+                    $this->execute(
+                        'UPDATE events SET deleted_at = NOW(), updated_at = NOW() WHERE id = ?',
+                        [$eventId]
+                    );
+                    $this->portal->auditLog((int) $this->user['id'], 'EVENT_ARCHIVED', 'event', $eventId);
+                    $message = 'Event archived.';
+
+                    if ($editId === $eventId) {
+                        return redirect()->to(app_url('admin/events'))->with('message', $message);
+                    }
+                }
             } catch (\Throwable $e) {
                 $error = $e->getMessage();
             }
@@ -178,6 +215,16 @@ class AdminController extends BaseController
         $editEvent = $editId > 0
             ? $this->fetchOne('SELECT * FROM events WHERE id = ? AND deleted_at IS NULL', [$editId])
             : null;
+
+        if ($editEvent) {
+            $editStatus = strtolower(trim((string) ($editEvent['status'] ?? '')));
+            if (in_array($editStatus, ['open', 'ongoing'], true)) {
+                if ($error === '') {
+                    $error = 'Editing is disabled when an event is already open or ongoing.';
+                }
+                $editEvent = null;
+            }
+        }
         $events    = $this->fetchAll(
             "SELECT e.*,
                     (SELECT COUNT(*) FROM tickets t WHERE t.event_id = e.id AND t.deleted_at IS NULL) AS ticket_count

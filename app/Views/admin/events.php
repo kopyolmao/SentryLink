@@ -182,6 +182,64 @@
     gap: 0.75rem;
 }
 
+.event-archive-modal[hidden] {
+    display: none !important;
+}
+
+.event-archive-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+}
+
+.event-archive-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 8, 24, 0.76);
+    backdrop-filter: blur(6px);
+}
+
+.event-archive-dialog {
+    position: relative;
+    width: min(100%, 460px);
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    padding: 1.35rem;
+}
+
+.event-archive-copy {
+    color: var(--muted);
+    margin-bottom: 1rem;
+}
+
+.event-archive-card {
+    margin-bottom: 1rem;
+    padding: 0.95rem 1rem;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.event-archive-card strong,
+.event-archive-card small {
+    display: block;
+}
+
+.event-archive-card small {
+    color: var(--muted);
+}
+
+.event-archive-actions {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
 @media (max-width: 1100px) {
     .span-6,
     .span-4,
@@ -216,6 +274,14 @@
     }
 
     .event-cancel-actions .btn {
+        width: 100%;
+    }
+
+    .event-archive-actions {
+        flex-direction: column;
+    }
+
+    .event-archive-actions .btn {
         width: 100%;
     }
 
@@ -340,6 +406,8 @@
                 <?php
                 $eventStatus = strtolower(trim((string) ($event['status'] ?? '')));
                 $canPrepareGate = ! event_has_ended($event) && ! in_array($eventStatus, ['closed', 'cancelled'], true);
+                $canEditEvent = ! in_array($eventStatus, ['open', 'ongoing'], true);
+                $canArchiveEvent = ! in_array($eventStatus, ['open', 'ongoing'], true);
                 ?>
                 <tr>
                     <td><strong><?= h($event['title']) ?></strong><div class="text-secondary"><?= h($event['venue']) ?></div></td>
@@ -348,10 +416,24 @@
                     <td><?= h((string) $event['ticket_count']) ?></td>
                     <td>
                         <div class="event-table-actions">
-                            <a class="btn btn-outline-light btn-sm" href="<?= h(app_url('admin/events') . '?id=' . $event['id']) ?>">Edit</a>
+                            <?php if ($canEditEvent): ?>
+                                <a class="btn btn-outline-light btn-sm" href="<?= h(app_url('admin/events') . '?id=' . $event['id']) ?>">Edit</a>
+                            <?php else: ?>
+                                <button type="button" class="btn btn-outline-light btn-sm" disabled title="Editing is disabled for open/ongoing events">Edit Locked</button>
+                            <?php endif; ?>
                             <a class="btn btn-outline-light btn-sm" href="<?= h(app_url('admin/events/' . $event['id'] . '/activities')) ?>">Activities</a>
                             <?php if ($canPrepareGate): ?>
                                 <form method="POST"><input type="hidden" name="event_id" value="<?= h((string) $event['id']) ?>"><button class="btn btn-success btn-sm" name="prepare_gate" value="1">Start Event & Prepare Gate</button></form>
+                            <?php endif; ?>
+                            <?php if ($canArchiveEvent): ?>
+                                <button
+                                    type="button"
+                                    class="btn btn-warning btn-sm js-archive-event"
+                                    data-event-id="<?= h((string) $event['id']) ?>"
+                                    data-event-title="<?= h((string) $event['title']) ?>"
+                                >
+                                    Archive
+                                </button>
                             <?php endif; ?>
                             <button
                                 type="button"
@@ -368,6 +450,24 @@
             </tbody>
         </table>
 </div>
+</div>
+<div class="event-archive-modal" id="eventArchiveModal" hidden>
+    <div class="event-archive-backdrop" data-close-event-archive></div>
+    <div class="event-archive-dialog" role="dialog" aria-modal="true" aria-labelledby="eventArchiveTitle" aria-describedby="eventArchiveDescription">
+        <h3 class="h5 mb-2" id="eventArchiveTitle">Archive event?</h3>
+        <p class="event-archive-copy" id="eventArchiveDescription">This hides the event from active admin lists but keeps historical records.</p>
+        <div class="event-archive-card">
+            <strong id="eventArchiveName"></strong>
+            <small>Archived events can no longer be edited from this page.</small>
+        </div>
+        <form method="POST">
+            <input type="hidden" name="event_id" id="event_archive_target_id">
+            <div class="event-archive-actions">
+                <button type="button" class="btn btn-outline-light" id="eventArchiveKeep" data-close-event-archive>Keep Event</button>
+                <button type="submit" class="btn btn-warning" name="archive_event" value="1">Archive Event</button>
+            </div>
+        </form>
+    </div>
 </div>
 <div class="event-cancel-modal" id="eventCancelModal" hidden>
     <div class="event-cancel-backdrop" data-close-event-cancel></div>
@@ -531,6 +631,12 @@ const eventCancelTargetId = document.getElementById("event_cancel_target_id");
 const eventCancelKeep = document.getElementById("eventCancelKeep");
 const eventCancelButtons = document.querySelectorAll(".js-cancel-event");
 const eventCancelCloseButtons = document.querySelectorAll("[data-close-event-cancel]");
+const eventArchiveModal = document.getElementById("eventArchiveModal");
+const eventArchiveName = document.getElementById("eventArchiveName");
+const eventArchiveTargetId = document.getElementById("event_archive_target_id");
+const eventArchiveKeep = document.getElementById("eventArchiveKeep");
+const eventArchiveButtons = document.querySelectorAll(".js-archive-event");
+const eventArchiveCloseButtons = document.querySelectorAll("[data-close-event-archive]");
 
 function openEventCancelModal(eventId, eventTitle) {
     if (!eventCancelModal || !eventCancelTargetId) {
@@ -555,6 +661,46 @@ function closeEventCancelModal() {
     document.body.style.overflow = "";
 }
 
+function openEventArchiveModal(eventId, eventTitle) {
+    if (!eventArchiveModal || !eventArchiveTargetId) {
+        return;
+    }
+
+    eventArchiveTargetId.value = eventId;
+    if (eventArchiveName) {
+        eventArchiveName.textContent = eventTitle || "Selected event";
+    }
+
+    eventArchiveModal.hidden = false;
+    document.body.style.overflow = "hidden";
+}
+
+function closeEventArchiveModal() {
+    if (!eventArchiveModal || eventArchiveModal.hidden) {
+        return;
+    }
+
+    eventArchiveModal.hidden = true;
+    document.body.style.overflow = "";
+}
+
+eventArchiveButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+        openEventArchiveModal(
+            button.getAttribute("data-event-id") || "",
+            button.getAttribute("data-event-title") || ""
+        );
+    });
+});
+
+eventArchiveCloseButtons.forEach((button) => {
+    button.addEventListener("click", closeEventArchiveModal);
+});
+
+if (eventArchiveKeep) {
+    eventArchiveKeep.addEventListener("click", closeEventArchiveModal);
+}
+
 eventCancelButtons.forEach((button) => {
     button.addEventListener("click", () => {
         openEventCancelModal(
@@ -575,6 +721,7 @@ if (eventCancelKeep) {
 document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
         closeHelpTooltip();
+        closeEventArchiveModal();
         closeEventCancelModal();
     }
 });
