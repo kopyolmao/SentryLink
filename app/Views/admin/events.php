@@ -299,7 +299,8 @@
                 Ticket Price
                 <button type="button" class="field-help" data-help="Amount students pay per ticket. Hidden automatically when Free Event is enabled." aria-label="Ticket price help">?</button>
             </label>
-            <input type="number" step="0.01" min="0" class="form-control" id="ticketPriceInput" name="ticket_price" value="<?= h((string) ($editEvent['ticket_price'] ?? '')) ?>">
+            <input type="number" step="0.01" min="0.01" class="form-control" id="ticketPriceInput" name="ticket_price" value="<?= h((string) ($editEvent['ticket_price'] ?? '')) ?>" title="Ticket price must be greater than 0 and can have up to 2 decimal places.">
+            <p class="field-note">Paid events require a price greater than 0. Example: 150 or 150.50.</p>
         </div>
 
         <div class="event-field span-3">
@@ -512,8 +513,10 @@ if (freeEventCheckbox && ticketPriceField) {
             if (isFree) {
                 ticketPriceInput.value = "";
                 ticketPriceInput.disabled = true;
+                ticketPriceInput.required = false;
             } else {
                 ticketPriceInput.disabled = false;
+                ticketPriceInput.required = true;
             }
         }
     };

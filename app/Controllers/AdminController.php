@@ -57,8 +57,16 @@ class AdminController extends BaseController
                         throw new \RuntimeException('Select a valid event status.');
                     }
 
-                    if (! $isFree && $ticketPrice < 0) {
-                        throw new \RuntimeException('Ticket price cannot be negative.');
+                    if (! $isFree && $ticketPriceRaw === '') {
+                        throw new \RuntimeException('Ticket price is required for paid events.');
+                    }
+
+                    if (! $isFree && ! is_numeric($ticketPriceRaw)) {
+                        throw new \RuntimeException('Ticket price must be a valid number.');
+                    }
+
+                    if (! $isFree && $ticketPrice <= 0) {
+                        throw new \RuntimeException('Ticket price must be greater than 0 for paid events.');
                     }
 
                     if ($capacity !== null && $capacity < 0) {

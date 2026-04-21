@@ -1152,6 +1152,7 @@ HTML;
         if (!validity) {
             return "";
         }
+        const label = findFieldLabel(field);
 
         if (field.type === "number" && /^[-+]$/.test(field.value.trim())) {
             return "Enter a valid number.";
@@ -1162,9 +1163,12 @@ HTML;
         }
 
         if (validity.valueMissing) {
-            return `${findFieldLabel(field)} is required.`;
+            return `${label} is required.`;
         }
         if (validity.badInput) {
+            if (field.type === "number") {
+                return `${label} must be a valid number.`;
+            }
             return "Enter a valid value.";
         }
         if (validity.typeMismatch) {
@@ -1175,6 +1179,12 @@ HTML;
         }
         if (validity.rangeUnderflow) {
             const minValue = field.getAttribute("min");
+            if (field.type === "number" && minValue !== null) {
+                const minNumber = Number(minValue);
+                if (!Number.isNaN(minNumber) && minNumber > 0 && minNumber <= 1) {
+                    return `${label} must be greater than 0.`;
+                }
+            }
             return minValue !== null ? `Value must be at least ${minValue}.` : "Value is too low.";
         }
         if (validity.rangeOverflow) {
@@ -1183,6 +1193,9 @@ HTML;
         }
         if (validity.stepMismatch) {
             const stepValue = field.getAttribute("step");
+            if (field.type === "number" && stepValue === "0.01") {
+                return `${label} can have up to 2 decimal places.`;
+            }
             return stepValue && stepValue !== "any"
                 ? `Use increments of ${stepValue}.`
                 : "Enter a valid increment.";
@@ -1231,6 +1244,10 @@ HTML;
             applyFieldValidation(field, true);
         };
 
+        field.addEventListener("invalid", (event) => {
+            event.preventDefault();
+            markTouchedAndValidate();
+        });
         field.addEventListener("input", markTouchedAndValidate);
         field.addEventListener("change", markTouchedAndValidate);
         field.addEventListener("blur", markTouchedAndValidate);
