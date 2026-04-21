@@ -331,13 +331,15 @@ html.page-loading .viewport-shell {
 <?php
 $normalizedPortal = strtolower((string) $portalLabel);
 $headline = match ($normalizedPortal) {
-    'student'  => 'Student access with dynamic ticket validation.',
+    'student'  => 'Smart Ticketing System for student events.',
     'officer'  => 'Officer access for live gate validation.',
     'admin'    => 'Administrative access for events and reports.',
     'director' => 'Director access for oversight and audit visibility.',
     'cashier'  => 'Cashier access for direct paid ticket encoding.',
     default    => 'Secure access for the SentryLink platform.',
 };
+
+$portalAccessText = $normalizedPortal === 'student' ? 'Ticketing System' : 'portal access';
 
 $supportingText = match ($normalizedPortal) {
     'student'  => 'Sign in to manage event tickets, live QR credentials, and campus notifications.',
@@ -382,7 +384,7 @@ $heroSystemTitle = trim((string) ($heroTitle ?? '')) !== '' ? (string) $heroTitl
             <h1 class="animate-fade-in-up animate-delay-200 text-4xl font-light leading-tight text-on-surface xl:text-5xl 2xl:text-6xl">
                 <?= h($heroSystemTitle) ?><br>
                 <span class="italic font-normal"><?= h($portalLabel) ?></span>
-                <span class="text-primary-fixed-dim">portal access</span>.
+                <span class="text-primary-fixed-dim"><?= h($portalAccessText) ?></span>.
             </h1>
             <p class="animate-fade-in-up animate-delay-300 max-w-md text-base leading-relaxed text-on-surface-variant xl:text-lg"><?= h($heroText !== '' ? $heroText : $supportingText) ?></p>
         </div>
