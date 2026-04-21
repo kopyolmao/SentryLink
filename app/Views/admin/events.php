@@ -350,7 +350,7 @@
                             <a class="btn btn-outline-light btn-sm" href="<?= h(app_url('admin/events') . '?id=' . $event['id']) ?>">Edit</a>
                             <a class="btn btn-outline-light btn-sm" href="<?= h(app_url('admin/events/' . $event['id'] . '/activities')) ?>">Activities</a>
                             <?php if ($canPrepareGate): ?>
-                                <form method="POST"><input type="hidden" name="event_id" value="<?= h((string) $event['id']) ?>"><button class="btn btn-primary btn-sm" name="prepare_gate" value="1">Start Event & Prepare Gate</button></form>
+                                <form method="POST"><input type="hidden" name="event_id" value="<?= h((string) $event['id']) ?>"><button class="btn btn-success btn-sm" name="prepare_gate" value="1">Start Event & Prepare Gate</button></form>
                             <?php endif; ?>
                             <button
                                 type="button"

@@ -217,7 +217,7 @@ if ($selectedHouse === null || $selectedHouse === '') {
 
         <div class="profile-field span-12">
             <div class="profile-actions">
-                <button class="btn btn-primary" id="saveProfileBtn" disabled>Save Profile</button>
+                <button class="btn btn-success" id="saveProfileBtn" disabled>Save Profile</button>
                 <a class="btn btn-outline-light" href="<?= h(app_url('s/settings/reset-password')) ?>">Change Password</a>
             </div>
         </div>

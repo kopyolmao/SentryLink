@@ -135,7 +135,7 @@
                     <td><?= h($account['email']) ?></td>
                     <td><?= h(shell_role_label((string) ($account['role'] ?? ''))) ?></td>
                     <td><span class="badge text-bg-<?= (int) $account['is_active'] === 1 ? 'success' : 'secondary' ?>"><?= (int) $account['is_active'] === 1 ? 'Active' : 'Inactive' ?></span></td>
-                    <td><form method="POST"><input type="hidden" name="target_id" value="<?= $account['id'] ?>"><button class="btn btn-outline-light btn-sm" name="toggle_active" value="1"><?= (int) $account['is_active'] === 1 ? 'Deactivate' : 'Activate' ?></button></form></td>
+                    <td><form method="POST"><input type="hidden" name="target_id" value="<?= $account['id'] ?>"><button class="btn <?= (int) $account['is_active'] === 1 ? 'btn-warning' : 'btn-success' ?> btn-sm" name="toggle_active" value="1"><?= (int) $account['is_active'] === 1 ? 'Deactivate' : 'Activate' ?></button></form></td>
                 </tr>
             <?php endforeach; ?>
             </tbody>

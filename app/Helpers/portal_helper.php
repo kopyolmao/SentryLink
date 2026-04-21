@@ -352,7 +352,68 @@ html.scrollbar-active *::-webkit-scrollbar-corner { background: var(--scroll-tra
     margin-top: 0.55rem;
 }
 .table-dark { --bs-table-bg: transparent; --bs-table-striped-bg: rgba(255,255,255,0.02); --bs-table-border-color: var(--border); margin-bottom: 0; }
-.btn-primary { background: var(--accent); border-color: var(--accent); }
+.btn {
+    transition: background-color 140ms ease, border-color 140ms ease, box-shadow 140ms ease, transform 120ms ease;
+}
+.btn:active {
+    transform: translateY(1px);
+}
+.btn-primary {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 88%, white 12%), var(--accent));
+    border-color: var(--accent);
+    color: #f5f7ff;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
+}
+.btn-primary:hover,
+.btn-primary:focus {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 82%, white 18%), color-mix(in srgb, var(--accent) 92%, black 8%));
+    border-color: color-mix(in srgb, var(--accent) 80%, white 20%);
+    color: #fff;
+}
+.btn-success {
+    background: linear-gradient(180deg, #2ca46a, #228653);
+    border-color: #2ca46a;
+    color: #f3fff8;
+}
+.btn-success:hover,
+.btn-success:focus {
+    background: linear-gradient(180deg, #39b978, #2ca46a);
+    border-color: #43c182;
+    color: #fff;
+}
+.btn-warning {
+    background: linear-gradient(180deg, #f4bf58, #d89d2a);
+    border-color: #f4bf58;
+    color: #221a08;
+}
+.btn-warning:hover,
+.btn-warning:focus {
+    background: linear-gradient(180deg, #ffd06f, #e4af44);
+    border-color: #ffd06f;
+    color: #1f1808;
+}
+.btn-info {
+    background: linear-gradient(180deg, #4f92db, #356fb2);
+    border-color: #4f92db;
+    color: #f4f9ff;
+}
+.btn-info:hover,
+.btn-info:focus {
+    background: linear-gradient(180deg, #61a5ee, #427fca);
+    border-color: #61a5ee;
+    color: #fff;
+}
+.btn-danger {
+    background: linear-gradient(180deg, #e2676f, #bf434d);
+    border-color: #e2676f;
+    color: #fff4f5;
+}
+.btn-danger:hover,
+.btn-danger:focus {
+    background: linear-gradient(180deg, #f07a82, #cf515c);
+    border-color: #f07a82;
+    color: #fff;
+}
 .btn-outline-light { border-color: var(--border); color: var(--text); }
 .form-control, .form-select, .form-control:focus, .form-select:focus { background: #0d1527; color: #fff; border-color: #2b3959; }
 .form-control[type="number"] {

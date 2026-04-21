@@ -66,7 +66,7 @@
             <input class="form-control" name="receipt_no" maxlength="120" value="<?= h($receiptNo) ?>" placeholder="e.g. OR-2026-0001" required>
         </div>
         <div class="cashier-field span-12">
-            <button class="btn btn-primary" name="encode_paid_ticket" value="1">Encode Paid Ticket</button>
+            <button class="btn btn-success" name="encode_paid_ticket" value="1">Encode Paid Ticket</button>
         </div>
     </form>
 </div>

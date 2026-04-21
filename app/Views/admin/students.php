@@ -216,7 +216,7 @@ $selectedCourse = old('course_select');
                             <div class="student-table-actions">
                                 <button
                                     type="button"
-                                    class="btn btn-outline-light btn-sm js-toggle-student-access"
+                                    class="btn <?= (int) $student['is_active'] === 1 ? 'btn-warning' : 'btn-success' ?> btn-sm js-toggle-student-access"
                                     data-target-id="<?= h((string) $student['id']) ?>"
                                     data-student-name="<?= h($fullName) ?>"
                                     data-student-number="<?= h($student['student_id']) ?>"
@@ -370,8 +370,9 @@ function openAccessModal(targetId, studentName, studentNumber, isActive) {
     }
 
     studentAccessConfirmButton.textContent = shouldDeactivate ? "Deactivate Student" : "Activate Student";
+    studentAccessConfirmButton.classList.remove("btn-success", "btn-danger");
     studentAccessConfirmButton.classList.toggle("btn-danger", shouldDeactivate);
-    studentAccessConfirmButton.classList.toggle("btn-primary", !shouldDeactivate);
+    studentAccessConfirmButton.classList.toggle("btn-success", !shouldDeactivate);
 
     studentAccessModal.hidden = false;
     syncBodyScrollLock();
