@@ -19,7 +19,7 @@ foreach ($upcoming as $ticket) {
 
 $primaryAction = $hasLiveQr
     ? ['label' => 'Open My QR', 'url' => app_url('s/my-qr')]
-    : ['label' => 'View My Tickets', 'url' => app_url('s/my-tickets')];
+    : ['label' => 'View My Transactions', 'url' => app_url('s/my-tickets')];
 
 $secondaryAction = $stats['notifications'] > 0
     ? ['label' => 'Review Notifications', 'url' => app_url('s/notifications')]

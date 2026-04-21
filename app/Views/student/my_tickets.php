@@ -1,4 +1,4 @@
-<?php shell_start('SentryLink | My Tickets', $user, 'student', 'tickets', 'My Tickets', 'All ticket records tied to your account.'); ?>
+<?php shell_start('SentryLink | My Transactions', $user, 'student', 'tickets', 'My Transactions', 'All ticket records tied to your account.'); ?>
 <div class="panel">
     <?php if ($tickets): ?>
         <div class="table-wrap">
@@ -27,7 +27,7 @@
             </table>
         </div>
     <?php else: ?>
-        <p class="text-secondary mb-0">No tickets found yet.</p>
+        <p class="text-secondary mb-0">No transactions found yet.</p>
     <?php endif; ?>
 </div>
 <?php

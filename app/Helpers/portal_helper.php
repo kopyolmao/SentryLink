@@ -76,7 +76,7 @@ if (! function_exists('shell_nav_items')) {
         return match ($role) {
             'student' => [
                 'qr'            => ['My QR', app_url('s/my-qr')],
-                'tickets'       => ['My Tickets', app_url('s/my-tickets')],
+                'tickets'       => ['My Transactions', app_url('s/my-tickets')],
                 'account'       => ['Account', app_url('s/account')],
                 'notifications' => ['Notifications', app_url('s/notifications')],
             ],
