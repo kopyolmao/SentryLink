@@ -73,9 +73,9 @@ body {
 }
 
 :root {
-    --logo-badge-scale: 1.28;
+    --logo-badge-scale: 1.94;
     --logo-badge-offset-x: 0px;
-    --logo-badge-offset-y: 0px;
+    --logo-badge-offset-y: 9px;
 }
 
 body {
@@ -576,8 +576,8 @@ $showLogoTuner = ((string) service('request')->getGet('logo_tune') === '1');
         <div class="logo-tune-grid">
             <div class="logo-tune-row">
                 <label for="logoScaleRange">Size</label>
-                <input id="logoScaleRange" type="range" min="0.8" max="2.1" step="0.01" value="1.28">
-                <output id="logoScaleValue" for="logoScaleRange">1.28x</output>
+                <input id="logoScaleRange" type="range" min="0.8" max="2.1" step="0.01" value="1.94">
+                <output id="logoScaleValue" for="logoScaleRange">1.94x</output>
             </div>
             <div class="logo-tune-row">
                 <label for="logoLeftRange">Left</label>
@@ -586,8 +586,8 @@ $showLogoTuner = ((string) service('request')->getGet('logo_tune') === '1');
             </div>
             <div class="logo-tune-row">
                 <label for="logoTopRange">Top</label>
-                <input id="logoTopRange" type="range" min="-24" max="24" step="1" value="0">
-                <output id="logoTopValue" for="logoTopRange">0px</output>
+                <input id="logoTopRange" type="range" min="-24" max="24" step="1" value="9">
+                <output id="logoTopValue" for="logoTopRange">9px</output>
             </div>
         </div>
     </aside>
