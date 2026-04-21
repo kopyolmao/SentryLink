@@ -183,13 +183,6 @@ class PortalService
             return ['ok' => false, 'message' => 'Incorrect password.'];
         }
 
-        if ($this->hasActiveSessionConflict($user)) {
-            return [
-                'ok'      => false,
-                'message' => 'This account is already logged in on another device. Please log out there first and try again.',
-            ];
-        }
-
         if ($normalizedRole === 'student' && (int) ($user['email_verified'] ?? 0) === 0) {
             $this->clearLoginAttempts($identifier, $ipAddress);
             $this->session->set([
