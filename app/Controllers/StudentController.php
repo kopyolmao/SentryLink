@@ -141,8 +141,7 @@ class StudentController extends BaseController
                 $firstName = $this->portal->sanitizeNameInput((string) $this->request->getPost('first_name'), 50);
                 $lastName  = $this->portal->sanitizeNameInput((string) $this->request->getPost('last_name'), 50);
                 $selectedCourse = trim((string) $this->request->getPost('course_select'));
-                $manualCourse = $this->portal->sanitizePlainInput((string) $this->request->getPost('course_other'), 100, true, true);
-                $course = $selectedCourse === 'Other' ? $manualCourse : $selectedCourse;
+                $course = $selectedCourse;
                 $yearLevel = trim((string) $this->request->getPost('year_level'));
                 $house = trim((string) $this->request->getPost('house'));
                 $profilePhotoPath = null;
@@ -156,9 +155,6 @@ class StudentController extends BaseController
                 }
                 if ($selectedCourse === '' || ! in_array($selectedCourse, $profileOptions['courses'], true)) {
                     throw new \RuntimeException('Please select a valid course.');
-                }
-                if ($selectedCourse === 'Other' && $course === '') {
-                    throw new \RuntimeException('Please enter your course when "Other" is selected.');
                 }
                 if (! in_array($yearLevel, $profileOptions['yearLevels'], true)) {
                     throw new \RuntimeException('Please select a valid year level.');
@@ -252,7 +248,7 @@ class StudentController extends BaseController
     private function studentProfileOptions(): array
     {
         return [
-            'courses'    => ['BSIT', 'BSCS', 'BSBA', 'BSHM', 'BSA', 'BSIS', 'Other'],
+            'courses'    => ['BSIT', 'BSCS', 'BSBA', 'BSHM', 'BSA', 'BSIS'],
             'yearLevels' => ['1st Year', '2nd Year', '3rd Year', '4th Year'],
             'houses'     => ['Azul', 'Cahel', 'Giallio', 'Roxxo', 'Vierrdy'],
         ];

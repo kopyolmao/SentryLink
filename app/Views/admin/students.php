@@ -1,6 +1,6 @@
 <?php shell_start('SentryLink | Students', $user, 'admin', 'students', 'Student Management', 'Add or review student accounts.'); ?>
 <?php
-$courses = ['BSIT', 'BSCS', 'BSBA', 'BSHM', 'BSA', 'BSIS', 'Other'];
+$courses = ['BSIT', 'BSCS', 'BSBA', 'BSHM', 'BSA', 'BSIS'];
 $yearLevels = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
 $houses = ['Azul', 'Cahel', 'Giallio', 'Roxxo', 'Vierrdy'];
 $selectedCourse = old('course_select');
@@ -20,10 +20,6 @@ $selectedCourse = old('course_select');
 .span-6 { grid-column: span 6; }
 .span-4 { grid-column: span 4; }
 .span-3 { grid-column: span 3; }
-
-.other-course-field[hidden] {
-    display: none !important;
-}
 
 .student-table-actions {
     display: flex;
@@ -153,11 +149,6 @@ $selectedCourse = old('course_select');
             </select>
         </div>
 
-        <div class="span-4 other-course-field" id="other_course_field"<?= $selectedCourse === 'Other' ? '' : ' hidden' ?>>
-            <label class="form-label">Other Course</label>
-            <input class="form-control" name="course_other" id="course_other" placeholder="Enter course name" value="<?= h(old('course_other')) ?>">
-        </div>
-
         <div class="span-4">
             <label class="form-label">Year Level</label>
             <select class="form-select" name="year_level" required>
@@ -279,9 +270,6 @@ $selectedCourse = old('course_select');
     </div>
 </div>
 <script>
-const courseSelect = document.getElementById("course_select");
-const otherCourseField = document.getElementById("other_course_field");
-const otherCourseInput = document.getElementById("course_other");
 const studentDeleteModal = document.getElementById("studentDeleteModal");
 const studentAccessModal = document.getElementById("studentAccessModal");
 const studentDeleteName = document.getElementById("studentDeleteName");
@@ -304,21 +292,6 @@ const passwordToggles = document.querySelectorAll(".js-password-toggle");
 function syncBodyScrollLock() {
     const hasOpenModal = (studentDeleteModal && !studentDeleteModal.hidden) || (studentAccessModal && !studentAccessModal.hidden);
     document.body.style.overflow = hasOpenModal ? "hidden" : "";
-}
-
-function syncCourseField() {
-    if (!courseSelect || !otherCourseField || !otherCourseInput) {
-        return;
-    }
-
-    if (courseSelect.value === "Other") {
-        otherCourseField.hidden = false;
-        otherCourseInput.required = true;
-    } else {
-        otherCourseField.hidden = true;
-        otherCourseInput.required = false;
-        otherCourseInput.value = "";
-    }
 }
 
 function openDeleteModal(targetId, studentName, studentNumber) {
@@ -403,11 +376,6 @@ function setupPasswordToggle(button) {
             icon.textContent = isVisible ? "visibility" : "visibility_off";
         }
     });
-}
-
-if (courseSelect) {
-    courseSelect.addEventListener("change", syncCourseField);
-    syncCourseField();
 }
 
 deleteButtons.forEach((button) => {

@@ -223,9 +223,11 @@ class AdminController extends BaseController
                 if ($this->request->getPost('create_student')) {
                     $password       = (string) ($this->request->getPost('password') ?? 'Password123!');
                     $policyErrors   = $this->portal->passwordPolicyErrors($password);
+                    $allowedCourses = ['BSIT', 'BSCS', 'BSBA', 'BSHM', 'BSA', 'BSIS'];
+                    $allowedYearLevels = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+                    $allowedHouses = ['Azul', 'Cahel', 'Giallio', 'Roxxo', 'Vierrdy'];
                     $selectedCourse = trim((string) $this->request->getPost('course_select'));
-                    $manualCourse   = trim((string) $this->request->getPost('course_other'));
-                    $course         = $selectedCourse === 'Other' ? $manualCourse : $selectedCourse;
+                    $course         = $selectedCourse;
                     $yearLevel      = trim((string) $this->request->getPost('year_level'));
                     $house          = trim((string) $this->request->getPost('house'));
 
@@ -233,16 +235,16 @@ class AdminController extends BaseController
                         throw new \RuntimeException(implode(' ', $policyErrors));
                     }
 
-                    if ($course === '') {
-                        throw new \RuntimeException('Please select a course. If you choose Other, enter the course name.');
+                    if (! in_array($course, $allowedCourses, true)) {
+                        throw new \RuntimeException('Please select a valid course.');
                     }
 
-                    if ($yearLevel === '') {
-                        throw new \RuntimeException('Please select a year level.');
+                    if (! in_array($yearLevel, $allowedYearLevels, true)) {
+                        throw new \RuntimeException('Please select a valid year level.');
                     }
 
-                    if ($house === '') {
-                        throw new \RuntimeException('Please select a house.');
+                    if (! in_array($house, $allowedHouses, true)) {
+                        throw new \RuntimeException('Please select a valid house.');
                     }
 
                     $this->execute(

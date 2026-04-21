@@ -8,19 +8,14 @@ if ($profilePhotoPath !== '') {
         : app_url(ltrim($profilePhotoPath, '/'));
 }
 $profileInitial = strtoupper(substr(trim((string) ($user['first_name'] ?? 'S')), 0, 1));
-$courses = isset($courses) && is_array($courses) ? $courses : ['BSIT', 'BSCS', 'BSBA', 'BSHM', 'BSA', 'BSIS', 'Other'];
+$courses = isset($courses) && is_array($courses) ? $courses : ['BSIT', 'BSCS', 'BSBA', 'BSHM', 'BSA', 'BSIS'];
 $yearLevels = isset($yearLevels) && is_array($yearLevels) ? $yearLevels : ['1st Year', '2nd Year', '3rd Year', '4th Year'];
 $houses = isset($houses) && is_array($houses) ? $houses : ['Azul', 'Cahel', 'Giallio', 'Roxxo', 'Vierrdy'];
 
 $currentCourse = trim((string) ($user['course'] ?? ''));
 $selectedCourse = old('course_select');
 if ($selectedCourse === null || $selectedCourse === '') {
-    $selectedCourse = in_array($currentCourse, $courses, true) ? $currentCourse : ($currentCourse !== '' ? 'Other' : '');
-}
-
-$courseOtherValue = old('course_other');
-if (($courseOtherValue === null || $courseOtherValue === '') && $selectedCourse === 'Other' && ! in_array($currentCourse, $courses, true)) {
-    $courseOtherValue = $currentCourse;
+    $selectedCourse = in_array($currentCourse, $courses, true) ? $currentCourse : '';
 }
 
 $selectedYearLevel = old('year_level');
@@ -57,10 +52,6 @@ if ($selectedHouse === null || $selectedHouse === '') {
 
 .profile-field select {
     width: 100%;
-}
-
-.other-course-field[hidden] {
-    display: none !important;
 }
 
 .profile-media {
@@ -190,11 +181,6 @@ if ($selectedHouse === null || $selectedHouse === '') {
             </select>
         </div>
 
-        <div class="profile-field span-4 other-course-field" id="other_course_field"<?= $selectedCourse === 'Other' ? '' : ' hidden' ?>>
-            <label class="form-label">Other Course</label>
-            <input class="form-control js-profile-track" name="course_other" id="course_other" value="<?= h((string) $courseOtherValue) ?>" maxlength="100"<?= $selectedCourse === 'Other' ? ' required' : '' ?>>
-        </div>
-
         <div class="profile-field span-4">
             <label class="form-label">Year Level</label>
             <select class="form-select js-profile-track" name="year_level" required>
@@ -229,9 +215,6 @@ const studentProfileForm = document.getElementById("studentProfileForm");
 const saveProfileBtn = document.getElementById("saveProfileBtn");
 const profileFields = studentProfileForm ? studentProfileForm.querySelectorAll(".js-profile-track") : [];
 const profilePhotoInput = document.getElementById("profile_photo");
-const courseSelect = document.getElementById("course_select");
-const otherCourseField = document.getElementById("other_course_field");
-const otherCourseInput = document.getElementById("course_other");
 const initialProfileValues = {};
 
 if (studentProfileForm && saveProfileBtn) {
@@ -239,27 +222,8 @@ if (studentProfileForm && saveProfileBtn) {
         initialProfileValues[field.name] = field.value;
     });
 
-    const syncCourseField = () => {
-        if (!courseSelect || !otherCourseField || !otherCourseInput) {
-            return;
-        }
-
-        if (courseSelect.value === "Other") {
-            otherCourseField.hidden = false;
-            otherCourseInput.required = true;
-        } else {
-            otherCourseField.hidden = true;
-            otherCourseInput.required = false;
-        }
-    };
-
     const updateSaveState = () => {
-        const textChanged = Array.from(profileFields).some((field) => {
-            if (field.name === "course_other" && courseSelect && courseSelect.value !== "Other") {
-                return false;
-            }
-            return field.value !== (initialProfileValues[field.name] || "");
-        });
+        const textChanged = Array.from(profileFields).some((field) => field.value !== (initialProfileValues[field.name] || ""));
         const photoChanged = !!(profilePhotoInput && profilePhotoInput.files && profilePhotoInput.files.length > 0);
         saveProfileBtn.disabled = !(textChanged || photoChanged);
     };
@@ -269,18 +233,10 @@ if (studentProfileForm && saveProfileBtn) {
         field.addEventListener("change", updateSaveState);
     });
 
-    if (courseSelect) {
-        courseSelect.addEventListener("change", () => {
-            syncCourseField();
-            updateSaveState();
-        });
-    }
-
     if (profilePhotoInput) {
         profilePhotoInput.addEventListener("change", updateSaveState);
     }
 
-    syncCourseField();
     updateSaveState();
 }
 </script>';
