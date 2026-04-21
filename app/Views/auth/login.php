@@ -72,6 +72,12 @@ body {
     height: 100%;
 }
 
+:root {
+    --logo-badge-scale: 1.28;
+    --logo-badge-offset-x: 0px;
+    --logo-badge-offset-y: 0px;
+}
+
 body {
     font-family: "Manrope", sans-serif;
     overflow: hidden;
@@ -177,8 +183,58 @@ html.page-loading .viewport-shell {
     display: block;
     border: 0;
     pointer-events: none;
-    transform: scale(1.28);
+    transform: translate(var(--logo-badge-offset-x), var(--logo-badge-offset-y)) scale(var(--logo-badge-scale));
     transform-origin: center;
+}
+
+.logo-tune-panel {
+    position: fixed;
+    left: 1rem;
+    bottom: 1rem;
+    z-index: 55;
+    width: min(92vw, 20rem);
+    border-radius: 1rem;
+    border: 1px solid rgba(148, 142, 162, 0.34);
+    background: rgba(13, 15, 49, 0.9);
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(10px);
+    padding: 0.85rem;
+}
+
+.logo-tune-panel h4 {
+    margin: 0 0 0.55rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #ccbdff;
+}
+
+.logo-tune-grid {
+    display: grid;
+    gap: 0.45rem;
+}
+
+.logo-tune-row {
+    display: grid;
+    grid-template-columns: 4rem 1fr auto;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.logo-tune-row label {
+    font-size: 0.72rem;
+    color: #cac3d9;
+}
+
+.logo-tune-row input[type="range"] {
+    accent-color: #7a3dff;
+}
+
+.logo-tune-row output {
+    min-width: 3.3rem;
+    text-align: right;
+    font-size: 0.7rem;
+    color: #e0e0ff;
 }
 
 .viewport-shell {
@@ -322,6 +378,12 @@ html.page-loading .viewport-shell {
         width: min(100%, 26rem);
         max-height: calc(100dvh - 5.5rem);
     }
+
+    .logo-tune-panel {
+        left: 0.6rem;
+        bottom: 0.6rem;
+        width: min(94vw, 18rem);
+    }
 }
 
 @media (max-height: 820px) {
@@ -390,6 +452,7 @@ $portalNotice = match ($normalizedPortal) {
 $passwordFieldId = 'password-input';
 $heroSystemTitle = trim((string) ($heroTitle ?? '')) !== '' ? (string) $heroTitle : 'SentryLink';
 $systemLogoUrl = site_url('system-logo');
+$showLogoTuner = ((string) service('request')->getGet('logo_tune') === '1');
 ?>
 <div class="fixed inset-0 pointer-events-none vanguard-glow"></div>
 <div class="fixed inset-0 pointer-events-none blueprint-grid"></div>
@@ -507,6 +570,28 @@ $systemLogoUrl = site_url('system-logo');
         </div>
     </section>
 </main>
+<?php if ($showLogoTuner): ?>
+    <aside class="logo-tune-panel" id="logoTunePanel">
+        <h4>Temporary Logo Tuner</h4>
+        <div class="logo-tune-grid">
+            <div class="logo-tune-row">
+                <label for="logoScaleRange">Size</label>
+                <input id="logoScaleRange" type="range" min="0.8" max="2.1" step="0.01" value="1.28">
+                <output id="logoScaleValue" for="logoScaleRange">1.28x</output>
+            </div>
+            <div class="logo-tune-row">
+                <label for="logoLeftRange">Left</label>
+                <input id="logoLeftRange" type="range" min="-24" max="24" step="1" value="0">
+                <output id="logoLeftValue" for="logoLeftRange">0px</output>
+            </div>
+            <div class="logo-tune-row">
+                <label for="logoTopRange">Top</label>
+                <input id="logoTopRange" type="range" min="-24" max="24" step="1" value="0">
+                <output id="logoTopValue" for="logoTopRange">0px</output>
+            </div>
+        </div>
+    </aside>
+<?php endif; ?>
 <?php if ((bool) ($showCaptchaModal ?? false)): ?>
     <div class="captcha-modal" id="captchaModal">
         <div class="captcha-modal-backdrop"></div>
@@ -639,6 +724,42 @@ if (captchaRefreshButton && captchaRefreshUrl !== "" && pendingLoginRole !== "")
         }
     });
 }
+
+(() => {
+    const panel = document.getElementById("logoTunePanel");
+    if (!panel) {
+        return;
+    }
+
+    const scaleRange = document.getElementById("logoScaleRange");
+    const leftRange = document.getElementById("logoLeftRange");
+    const topRange = document.getElementById("logoTopRange");
+    const scaleValue = document.getElementById("logoScaleValue");
+    const leftValue = document.getElementById("logoLeftValue");
+    const topValue = document.getElementById("logoTopValue");
+
+    const rootStyle = document.documentElement.style;
+
+    const apply = () => {
+        const scale = Number(scaleRange.value).toFixed(2);
+        const left = Math.round(Number(leftRange.value));
+        const top = Math.round(Number(topRange.value));
+
+        rootStyle.setProperty("--logo-badge-scale", scale);
+        rootStyle.setProperty("--logo-badge-offset-x", `${left}px`);
+        rootStyle.setProperty("--logo-badge-offset-y", `${top}px`);
+
+        scaleValue.textContent = `${scale}x`;
+        leftValue.textContent = `${left}px`;
+        topValue.textContent = `${top}px`;
+    };
+
+    [scaleRange, leftRange, topRange].forEach((input) => {
+        input.addEventListener("input", apply);
+    });
+
+    apply();
+})();
 </script>
 <?php if (trim((string) ($turnstileSiteKey ?? '')) !== ''): ?>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
