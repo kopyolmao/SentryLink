@@ -416,6 +416,19 @@ html.scrollbar-active *::-webkit-scrollbar-corner { background: var(--scroll-tra
 }
 .btn-outline-light { border-color: var(--border); color: var(--text); }
 .form-control, .form-select, .form-control:focus, .form-select:focus { background: #0d1527; color: #fff; border-color: #2b3959; }
+.form-control.is-invalid,
+.form-select.is-invalid,
+.form-control.is-invalid:focus,
+.form-select.is-invalid:focus {
+    border-color: rgba(240, 122, 130, 0.92);
+    box-shadow: 0 0 0 .2rem rgba(207, 81, 92, 0.18);
+}
+.field-validation-message {
+    margin-top: 0.35rem;
+    font-size: 0.78rem;
+    line-height: 1.35;
+    color: #f6aab1;
+}
 .form-control[type="number"] {
     color-scheme: dark;
 }
@@ -1068,8 +1081,184 @@ HTML;
 </script>
 HTML;
 
+        $validationScript = <<<'HTML'
+<script>
+(() => {
+    const FIELD_SELECTOR = "input:not([type='hidden']):not([type='submit']):not([type='button']):not([type='reset']):not([type='file']), select, textarea";
+    const formId = (() => {
+        if (!window.__sentrylinkLiveValidationCounter) {
+            window.__sentrylinkLiveValidationCounter = 0;
+        }
+        window.__sentrylinkLiveValidationCounter += 1;
+        return window.__sentrylinkLiveValidationCounter;
+    })();
+
+    const cleanLabel = (value) => {
+        if (typeof value !== "string") {
+            return "";
+        }
+        return value.trim().replace(/\s+/g, " ");
+    };
+
+    const findFieldLabel = (field) => {
+        const nearestLabel = field.closest("label");
+        if (nearestLabel) {
+            const text = cleanLabel(nearestLabel.textContent || "");
+            if (text !== "") {
+                return text;
+            }
+        }
+
+        if (field.id) {
+            const linkedLabel = document.querySelector(`label[for="${field.id}"]`);
+            if (linkedLabel) {
+                const text = cleanLabel(linkedLabel.textContent || "");
+                if (text !== "") {
+                    return text;
+                }
+            }
+        }
+
+        const ariaLabel = cleanLabel(field.getAttribute("aria-label") || "");
+        if (ariaLabel !== "") {
+            return ariaLabel;
+        }
+
+        return cleanLabel(field.getAttribute("placeholder") || "") || "This field";
+    };
+
+    const ensureMessageNode = (field) => {
+        if (!field.dataset.validationMessageId) {
+            const base = field.id || field.name || `field-${Math.random().toString(36).slice(2, 8)}`;
+            field.dataset.validationMessageId = `live-valid-${formId}-${base.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
+        }
+
+        const messageId = field.dataset.validationMessageId;
+        let node = document.getElementById(messageId);
+        if (node) {
+            return node;
+        }
+
+        node = document.createElement("div");
+        node.id = messageId;
+        node.className = "field-validation-message";
+        node.hidden = true;
+        field.insertAdjacentElement("afterend", node);
+        return node;
+    };
+
+    const validationMessage = (field) => {
+        const validity = field.validity;
+        if (!validity) {
+            return "";
+        }
+
+        if (field.type === "number" && /^[-+]$/.test(field.value.trim())) {
+            return "Enter a valid number.";
+        }
+
+        if (validity.valid) {
+            return "";
+        }
+
+        if (validity.valueMissing) {
+            return `${findFieldLabel(field)} is required.`;
+        }
+        if (validity.badInput) {
+            return "Enter a valid value.";
+        }
+        if (validity.typeMismatch) {
+            if (field.type === "email") {
+                return "Enter a valid email address.";
+            }
+            return "Enter a valid value.";
+        }
+        if (validity.rangeUnderflow) {
+            const minValue = field.getAttribute("min");
+            return minValue !== null ? `Value must be at least ${minValue}.` : "Value is too low.";
+        }
+        if (validity.rangeOverflow) {
+            const maxValue = field.getAttribute("max");
+            return maxValue !== null ? `Value must be ${maxValue} or below.` : "Value is too high.";
+        }
+        if (validity.stepMismatch) {
+            const stepValue = field.getAttribute("step");
+            return stepValue && stepValue !== "any"
+                ? `Use increments of ${stepValue}.`
+                : "Enter a valid increment.";
+        }
+        if (validity.tooShort) {
+            return `Enter at least ${field.minLength} characters.`;
+        }
+        if (validity.tooLong) {
+            return `Use at most ${field.maxLength} characters.`;
+        }
+        if (validity.patternMismatch) {
+            const title = cleanLabel(field.getAttribute("title") || "");
+            return title !== "" ? title : "Invalid format.";
+        }
+
+        return "Invalid value.";
+    };
+
+    const applyFieldValidation = (field, force = false) => {
+        if (!field || field.disabled || field.readOnly) {
+            return;
+        }
+
+        const touched = force || field.dataset.validationTouched === "1";
+        const message = validationMessage(field);
+        const showError = touched && message !== "";
+        const messageNode = ensureMessageNode(field);
+
+        messageNode.textContent = showError ? message : "";
+        messageNode.hidden = !showError;
+        field.classList.toggle("is-invalid", showError);
+        field.setAttribute("aria-invalid", showError ? "true" : "false");
+        field.setAttribute("aria-describedby", showError ? messageNode.id : "");
+    };
+
+    const bindField = (field) => {
+        if (!field || field.dataset.liveValidationBound === "1") {
+            return;
+        }
+
+        field.dataset.liveValidationBound = "1";
+        ensureMessageNode(field);
+
+        const markTouchedAndValidate = () => {
+            field.dataset.validationTouched = "1";
+            applyFieldValidation(field, true);
+        };
+
+        field.addEventListener("input", markTouchedAndValidate);
+        field.addEventListener("change", markTouchedAndValidate);
+        field.addEventListener("blur", markTouchedAndValidate);
+    };
+
+    document.querySelectorAll("form").forEach((form) => {
+        const fields = Array.from(form.querySelectorAll(FIELD_SELECTOR));
+        fields.forEach(bindField);
+
+        if (form.dataset.liveValidationSubmitBound === "1") {
+            return;
+        }
+
+        form.dataset.liveValidationSubmitBound = "1";
+        form.addEventListener("submit", () => {
+            fields.forEach((field) => {
+                field.dataset.validationTouched = "1";
+                applyFieldValidation(field, true);
+            });
+        });
+    });
+})();
+</script>
+HTML;
+
         echo $loaderScript;
         echo $scrollScript;
+        echo $validationScript;
         echo $dynamicShellScript;
         echo $script;
         ?>
