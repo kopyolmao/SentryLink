@@ -134,14 +134,17 @@ class StudentController extends BaseController
     {
         $message = '';
         $error   = '';
+        $profileOptions = $this->studentProfileOptions();
 
         if ($this->request->getMethod() === 'POST') {
             try {
                 $firstName = $this->portal->sanitizeNameInput((string) $this->request->getPost('first_name'), 50);
                 $lastName  = $this->portal->sanitizeNameInput((string) $this->request->getPost('last_name'), 50);
-                $course    = $this->portal->sanitizePlainInput((string) $this->request->getPost('course'), 100, true, true);
-                $yearLevel = $this->portal->sanitizePlainInput((string) $this->request->getPost('year_level'), 50, true, true);
-                $house     = $this->portal->sanitizePlainInput((string) $this->request->getPost('house'), 100, true, true);
+                $selectedCourse = trim((string) $this->request->getPost('course_select'));
+                $manualCourse = $this->portal->sanitizePlainInput((string) $this->request->getPost('course_other'), 100, true, true);
+                $course = $selectedCourse === 'Other' ? $manualCourse : $selectedCourse;
+                $yearLevel = trim((string) $this->request->getPost('year_level'));
+                $house = trim((string) $this->request->getPost('house'));
                 $profilePhotoPath = null;
                 $photoUploaded = false;
 
@@ -150,6 +153,18 @@ class StudentController extends BaseController
                 }
                 if (! $this->portal->isValidPersonName($lastName)) {
                     throw new \RuntimeException('Last name must be 1-50 characters and contain only letters, spaces, apostrophes, dots, or hyphens.');
+                }
+                if ($selectedCourse === '' || ! in_array($selectedCourse, $profileOptions['courses'], true)) {
+                    throw new \RuntimeException('Please select a valid course.');
+                }
+                if ($selectedCourse === 'Other' && $course === '') {
+                    throw new \RuntimeException('Please enter your course when "Other" is selected.');
+                }
+                if (! in_array($yearLevel, $profileOptions['yearLevels'], true)) {
+                    throw new \RuntimeException('Please select a valid year level.');
+                }
+                if (! in_array($house, $profileOptions['houses'], true)) {
+                    throw new \RuntimeException('Please select a valid house.');
                 }
 
                 $hasTextChanges =
@@ -203,7 +218,7 @@ class StudentController extends BaseController
                 if (! $hasTextChanges && ! $photoUploaded) {
                     $message = 'No profile changes detected.';
 
-                    return view('student/profile', ['message' => $message, 'error' => $error, 'user' => $this->user]);
+                    return view('student/profile', ['message' => $message, 'error' => $error, 'user' => $this->user] + $profileOptions);
                 }
 
                 if ($profilePhotoPath !== null) {
@@ -231,7 +246,16 @@ class StudentController extends BaseController
             }
         }
 
-        return view('student/profile', ['message' => $message, 'error' => $error, 'user' => $this->user]);
+        return view('student/profile', ['message' => $message, 'error' => $error, 'user' => $this->user] + $profileOptions);
+    }
+
+    private function studentProfileOptions(): array
+    {
+        return [
+            'courses'    => ['BSIT', 'BSCS', 'BSBA', 'BSHM', 'BSA', 'BSIS', 'Other'],
+            'yearLevels' => ['1st Year', '2nd Year', '3rd Year', '4th Year'],
+            'houses'     => ['Azul', 'Cahel', 'Giallio', 'Roxxo', 'Vierrdy'],
+        ];
     }
 
     public function account(): string
