@@ -56,6 +56,54 @@
     line-height: 1.6;
 }
 
+.qr-action-indicator {
+    margin: 0.9rem auto 0;
+    max-width: 32rem;
+    padding: 0.9rem 1rem;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.03);
+    display: grid;
+    gap: 0.25rem;
+    text-align: left;
+}
+
+.qr-action-indicator .qr-action-label {
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.qr-action-indicator .qr-action-value {
+    margin: 0;
+    font-size: 1.04rem;
+    font-weight: 700;
+}
+
+.qr-action-indicator .qr-action-copy {
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.qr-action-indicator.is-in {
+    border-color: rgba(59, 130, 246, 0.55);
+    background: linear-gradient(180deg, rgba(37, 99, 235, 0.2), rgba(37, 99, 235, 0.08));
+}
+
+.qr-action-indicator.is-in .qr-action-value {
+    color: #bfdbfe;
+}
+
+.qr-action-indicator.is-out {
+    border-color: rgba(245, 158, 11, 0.55);
+    background: linear-gradient(180deg, rgba(217, 119, 6, 0.2), rgba(217, 119, 6, 0.08));
+}
+
+.qr-action-indicator.is-out .qr-action-value {
+    color: #fcd34d;
+}
+
 @media (max-width: 640px) {
     .qr-download-btn {
         width: 100%;
@@ -82,6 +130,17 @@
                     <div class="position-absolute top-0 end-0 mt-2 me-2 badge text-bg-primary" id="countdown">10s</div>
                 </div>
                 <p class="text-secondary mb-2" id="refreshText">Generating QR...</p>
+                <div
+                    id="qrActionIndicator"
+                    class="qr-action-indicator <?= (($gateState['next_action'] ?? 'in') === 'out') ? 'is-out' : 'is-in' ?>"
+                    aria-live="polite"
+                >
+                    <span class="qr-action-label">Current QR Action</span>
+                    <p id="qrActionValue" class="qr-action-value mb-0">
+                        <?= (($gateState['next_action'] ?? 'in') === 'out') ? 'OUT Scan' : 'IN Scan' ?>
+                    </p>
+                    <span id="qrActionCopy" class="qr-action-copy"><?= h((string) ($gateState['next_action_copy'] ?? 'The next successful scan will log this student into the event.')) ?></span>
+                </div>
                 <div id="offlineBanner" class="alert alert-warning d-none mb-0">Offline mode detected. The displayed QR may expire until connection returns.</div>
                 <div class="live-qr-help">For faster gate scanning, turn your screen brightness up and hold the QR steady until the officer phone confirms it.</div>
                 <div class="qr-hold-row">
@@ -158,6 +217,9 @@ const downloadQrText = document.getElementById("downloadQrText");
 const downloadQrBuffer = document.getElementById("downloadQrBuffer");
 const holdQrBtn = document.getElementById("holdQrBtn");
 const holdQrText = document.getElementById("holdQrText");
+const qrActionIndicator = document.getElementById("qrActionIndicator");
+const qrActionValue = document.getElementById("qrActionValue");
+const qrActionCopy = document.getElementById("qrActionCopy");
 let seconds = 10;
 let qrCode = null;
 let downloadToken = "";
@@ -165,6 +227,21 @@ let downloadFileName = "sentrylink-entry-qr.png";
 let currentToken = "";
 let currentTokenVersion = 0;
 let heartbeatRttMs = 0;
+
+function renderQrActionIndicator(nextAction, nextActionCopy) {
+    if (!qrActionIndicator || !qrActionValue || !qrActionCopy) {
+        return;
+    }
+
+    const action = String(nextAction || "in").toLowerCase() === "out" ? "out" : "in";
+    qrActionIndicator.classList.toggle("is-out", action === "out");
+    qrActionIndicator.classList.toggle("is-in", action !== "out");
+    qrActionValue.textContent = action === "out" ? "OUT Scan" : "IN Scan";
+
+    if (typeof nextActionCopy === "string" && nextActionCopy.trim() !== "") {
+        qrActionCopy.textContent = nextActionCopy;
+    }
+}
 
 function renderQrCode(token) {
     if (!window.QRCode) {
@@ -277,6 +354,7 @@ async function refreshQr() {
         }
         syncDownloadQrState(Boolean(data.download_available && downloadToken));
         refreshText.textContent = "Last refreshed at " + new Date().toLocaleTimeString();
+        renderQrActionIndicator(data.next_action, data.next_action_copy);
         offlineBanner.classList.add("d-none");
         seconds = 10;
         countdownEl.textContent = "10s";
