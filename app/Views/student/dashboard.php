@@ -73,6 +73,239 @@ $nextStepText  = $hasLiveQr
     margin-bottom: 1.1rem;
 }
 
+.hero-headline {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.notification-bell-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.42rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.06);
+    color: #eef4ff;
+    padding: 0.42rem 0.75rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    transition: transform 140ms ease, border-color 140ms ease, background-color 140ms ease;
+}
+
+.notification-bell-btn:hover,
+.notification-bell-btn:focus {
+    transform: translateY(-1px);
+    border-color: rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.11);
+}
+
+.notification-bell-btn .material-symbols-outlined {
+    font-size: 1.04rem;
+}
+
+.notification-bell-count {
+    min-width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #ef4444;
+    color: #fff;
+    font-size: 0.69rem;
+    line-height: 1;
+    padding: 0 0.28rem;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+.notification-toast {
+    position: fixed;
+    top: 1.2rem;
+    right: 1.2rem;
+    z-index: 3000;
+    width: min(92vw, 24rem);
+    border-radius: 16px;
+    border: 1px solid rgba(96, 165, 250, 0.42);
+    background: linear-gradient(180deg, rgba(30, 58, 138, 0.95), rgba(16, 34, 86, 0.95));
+    color: #eaf3ff;
+    box-shadow: 0 18px 44px rgba(3, 9, 28, 0.5);
+    padding: 0.86rem 0.92rem;
+    transform: translateY(-10px) scale(0.98);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.notification-toast.is-visible {
+    animation: notificationToastIn 320ms cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+    pointer-events: auto;
+}
+
+.notification-toast.is-hiding {
+    animation: notificationToastOut 220ms ease forwards;
+}
+
+.notification-toast-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+}
+
+.notification-toast-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 700;
+}
+
+.notification-toast-copy {
+    margin-top: 0.4rem;
+    color: #cddfff;
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
+.notification-modal[hidden] {
+    display: none;
+}
+
+.notification-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 2900;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+}
+
+.notification-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(2, 6, 21, 0.74);
+    backdrop-filter: blur(2px);
+}
+
+.notification-modal-dialog {
+    position: relative;
+    width: min(100%, 38rem);
+    max-height: min(86vh, 42rem);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: linear-gradient(180deg, rgba(14, 23, 41, 0.98), rgba(9, 15, 27, 0.97));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 24px 56px rgba(0, 0, 0, 0.45);
+    animation: notificationModalIn 260ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.notification-modal-head,
+.notification-modal-foot {
+    padding: 0.92rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.notification-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+}
+
+.notification-modal-foot {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.6rem;
+}
+
+.notification-modal-body {
+    padding: 0.75rem 1rem 1rem;
+    overflow: auto;
+}
+
+.notification-modal-list {
+    display: grid;
+    gap: 0.62rem;
+}
+
+.notification-item {
+    width: 100%;
+    text-align: left;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.03);
+    color: inherit;
+    padding: 0.72rem 0.78rem;
+}
+
+.notification-item.is-unread {
+    border-color: rgba(96, 165, 250, 0.5);
+    background: linear-gradient(180deg, rgba(30, 58, 138, 0.2), rgba(14, 24, 54, 0.15));
+}
+
+.notification-item-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.7rem;
+    align-items: flex-start;
+}
+
+.notification-item-title {
+    font-weight: 700;
+}
+
+.notification-item-meta {
+    font-size: 0.76rem;
+    color: #9fb0cf;
+    white-space: nowrap;
+}
+
+.notification-item-copy {
+    margin-top: 0.34rem;
+    color: #c8d5ef;
+    font-size: 0.9rem;
+}
+
+@keyframes notificationToastIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.98);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes notificationToastOut {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.98);
+    }
+}
+
+@keyframes notificationModalIn {
+    0% {
+        opacity: 0;
+        transform: translateY(12px) scale(0.98);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
 .hero-grid {
     display: grid;
     grid-template-columns: minmax(0, 1.4fr) minmax(270px, 0.9fr);
@@ -194,12 +427,24 @@ $nextStepText  = $hasLiveQr
     .dashboard-grid {
         grid-template-columns: 1fr;
     }
+
+    .hero-headline {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 }
 </style>
 
 <div class="student-dashboard">
     <section class="student-hero">
-        <span class="hero-badge">Student Portal</span>
+        <div class="hero-headline">
+            <span class="hero-badge">Student Portal</span>
+            <button type="button" class="notification-bell-btn" id="notificationBellBtn" aria-haspopup="dialog" aria-controls="notificationModal" aria-label="Open notifications">
+                <span class="material-symbols-outlined" aria-hidden="true">notifications</span>
+                <span>Notifications</span>
+                <span id="notificationBellCount" class="notification-bell-count <?= ((int) ($stats['notifications'] ?? 0)) > 0 ? '' : 'd-none' ?>"><?= h((string) min(99, (int) ($stats['notifications'] ?? 0))) ?></span>
+            </button>
+        </div>
         <h2 class="hero-title">Welcome, <?= h($firstName) ?></h2>
         <p class="hero-copy"><?= h($nextStepText) ?></p>
 
@@ -236,7 +481,7 @@ $nextStepText  = $hasLiveQr
         </article>
         <article class="stat-card">
             <div class="stat-kicker">Unread Notifications</div>
-            <div class="stat-value"><?= h((string) ($stats['notifications'] ?? 0)) ?></div>
+            <div class="stat-value" id="dashboardNotificationCount"><?= h((string) ($stats['notifications'] ?? 0)) ?></div>
             <div class="stat-note">New announcements requiring review.</div>
         </article>
     </section>
@@ -308,17 +553,254 @@ $nextStepText  = $hasLiveQr
             </ul>
             <div class="d-grid gap-2 mt-3">
                 <a class="btn btn-outline-light btn-sm" href="<?= h(app_url('s/account')) ?>">Open Account</a>
-                <a class="btn btn-outline-light btn-sm" href="<?= h(app_url('s/notifications')) ?>">Open Notifications</a>
+                <button type="button" class="btn btn-outline-light btn-sm" id="openNotificationsPanelBtn">Open Notifications</button>
             </div>
         </aside>
     </section>
 </div>
 
+<div class="notification-toast" id="notificationToast" hidden role="status" aria-live="polite">
+    <div class="notification-toast-head">
+        <div class="notification-toast-title">
+            <span class="material-symbols-outlined" aria-hidden="true">notifications_active</span>
+            <span id="notificationToastTitle">New notifications</span>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-light" id="notificationToastOpenBtn">Open</button>
+    </div>
+    <div class="notification-toast-copy" id="notificationToastCopy"></div>
+</div>
+
+<div class="notification-modal" id="notificationModal" hidden>
+    <div class="notification-modal-backdrop" data-close-notification-modal></div>
+    <div class="notification-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="notificationModalTitle">
+        <div class="notification-modal-head">
+            <h3 class="h5 mb-0" id="notificationModalTitle">Notifications</h3>
+            <button type="button" class="btn btn-outline-light btn-sm" id="notificationMarkAllBtn">Mark All Read</button>
+        </div>
+        <div class="notification-modal-body">
+            <div class="text-secondary" id="notificationModalEmpty">No notifications yet.</div>
+            <div class="notification-modal-list" id="notificationModalList"></div>
+        </div>
+        <div class="notification-modal-foot">
+            <a class="btn btn-outline-light btn-sm" href="<?= h(app_url('s/notifications')) ?>">Open Full Page</a>
+            <button type="button" class="btn btn-primary btn-sm" data-close-notification-modal>Close</button>
+        </div>
+    </div>
+</div>
+
 <?php
-$script = '<script>
-const studentTicketStateUrl = ' . json_encode(app_url('api/student/ticket-state')) . ';
-let studentTicketStateHash = ' . json_encode($ticketStateHash ?? '') . ';
+$ticketStateUrl = json_encode(app_url('api/student/ticket-state'));
+$notificationFeedUrl = json_encode(app_url('api/notifications'));
+$notificationReadUrl = json_encode(app_url('api/notifications/read'));
+$initialUnreadCount = (int) ($stats['notifications'] ?? 0);
+$scriptTemplate = <<<'HTML'
+<script>
+const studentTicketStateUrl = __TICKET_STATE_URL__;
+const studentNotificationFeedUrl = __NOTIFICATION_FEED_URL__;
+const studentNotificationReadUrl = __NOTIFICATION_READ_URL__;
+const initialDashboardNotificationCount = __INITIAL_UNREAD_COUNT__;
+let studentTicketStateHash = __TICKET_STATE_HASH__;
 let studentTicketStateReloading = false;
+let notificationItems = [];
+let notificationUnreadCount = Number(initialDashboardNotificationCount || 0);
+let notificationToastTimer = null;
+
+const notificationBellBtn = document.getElementById("notificationBellBtn");
+const openNotificationsPanelBtn = document.getElementById("openNotificationsPanelBtn");
+const notificationBellCount = document.getElementById("notificationBellCount");
+const dashboardNotificationCount = document.getElementById("dashboardNotificationCount");
+const notificationModal = document.getElementById("notificationModal");
+const notificationModalList = document.getElementById("notificationModalList");
+const notificationModalEmpty = document.getElementById("notificationModalEmpty");
+const notificationMarkAllBtn = document.getElementById("notificationMarkAllBtn");
+const notificationToast = document.getElementById("notificationToast");
+const notificationToastTitle = document.getElementById("notificationToastTitle");
+const notificationToastCopy = document.getElementById("notificationToastCopy");
+const notificationToastOpenBtn = document.getElementById("notificationToastOpenBtn");
+const notificationCloseButtons = document.querySelectorAll("[data-close-notification-modal]");
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+function formatNotificationTime(value) {
+    const source = String(value || "").trim();
+    if (source === "") {
+        return "";
+    }
+
+    const parsed = new Date(source.replace(" ", "T"));
+    if (Number.isNaN(parsed.getTime())) {
+        return source;
+    }
+
+    return parsed.toLocaleString();
+}
+
+function hideNotificationToast() {
+    if (!notificationToast || notificationToast.hidden) {
+        return;
+    }
+
+    notificationToast.classList.remove("is-visible");
+    notificationToast.classList.add("is-hiding");
+    setTimeout(() => {
+        notificationToast.hidden = true;
+        notificationToast.classList.remove("is-hiding");
+    }, 220);
+}
+
+function showNotificationToast(title, copy) {
+    if (!notificationToast || !notificationToastTitle || !notificationToastCopy) {
+        return;
+    }
+
+    notificationToastTitle.textContent = title;
+    notificationToastCopy.textContent = copy;
+    notificationToast.hidden = false;
+    notificationToast.classList.remove("is-hiding");
+    notificationToast.classList.remove("is-visible");
+    void notificationToast.offsetWidth;
+    notificationToast.classList.add("is-visible");
+
+    if (notificationToastTimer) {
+        clearTimeout(notificationToastTimer);
+    }
+    notificationToastTimer = setTimeout(() => {
+        hideNotificationToast();
+    }, 5600);
+}
+
+function updateNotificationCounters(unreadCount) {
+    const value = Math.max(0, Number(unreadCount || 0));
+    notificationUnreadCount = value;
+
+    if (dashboardNotificationCount) {
+        dashboardNotificationCount.textContent = String(value);
+    }
+
+    if (!notificationBellCount) {
+        return;
+    }
+
+    if (value > 0) {
+        notificationBellCount.textContent = String(Math.min(99, value));
+        notificationBellCount.classList.remove("d-none");
+    } else {
+        notificationBellCount.classList.add("d-none");
+        notificationBellCount.textContent = "0";
+    }
+}
+
+function renderNotificationsModal() {
+    if (!notificationModalList || !notificationModalEmpty) {
+        return;
+    }
+
+    if (!Array.isArray(notificationItems) || notificationItems.length === 0) {
+        notificationModalList.innerHTML = "";
+        notificationModalEmpty.hidden = false;
+        return;
+    }
+
+    notificationModalEmpty.hidden = true;
+    notificationModalList.innerHTML = notificationItems.map((item) => {
+        const id = Number(item && item.id ? item.id : 0);
+        const isUnread = Number(item && item.is_read ? item.is_read : 0) === 0;
+        const title = escapeHtml(item && item.title ? item.title : "Notification");
+        const message = escapeHtml(item && item.message ? item.message : "");
+        const createdAt = escapeHtml(formatNotificationTime(item && item.created_at ? item.created_at : ""));
+        const statusLabel = isUnread ? "Unread" : "Read";
+        const statusBadge = isUnread ? "primary" : "secondary";
+
+        return `<button type="button" class="notification-item ${isUnread ? "is-unread" : ""}" data-notification-id="${id}" data-notification-unread="${isUnread ? "1" : "0"}">
+            <div class="notification-item-head">
+                <div>
+                    <div class="notification-item-title">${title}</div>
+                </div>
+                <div class="text-end">
+                    <span class="badge text-bg-${statusBadge}">${statusLabel}</span>
+                    <div class="notification-item-meta">${createdAt}</div>
+                </div>
+            </div>
+            <div class="notification-item-copy">${message}</div>
+        </button>`;
+    }).join("");
+}
+
+function openNotificationModal() {
+    if (!notificationModal) {
+        return;
+    }
+
+    notificationModal.hidden = false;
+    document.body.style.overflow = "hidden";
+}
+
+function closeNotificationModal() {
+    if (!notificationModal || notificationModal.hidden) {
+        return;
+    }
+
+    notificationModal.hidden = true;
+    document.body.style.overflow = "";
+}
+
+async function refreshNotifications(options = {}) {
+    const showAttention = Boolean(options.showAttention);
+    const previousUnread = notificationUnreadCount;
+
+    try {
+        const response = await fetch(studentNotificationFeedUrl, {
+            credentials: "same-origin",
+            cache: "no-store",
+            headers: { Accept: "application/json" },
+        });
+
+        if (!response.ok) {
+            return;
+        }
+
+        const data = await response.json();
+        const unread = Math.max(0, Number(data && data.unread ? data.unread : 0));
+        notificationItems = Array.isArray(data && data.notifications) ? data.notifications : [];
+        updateNotificationCounters(unread);
+        renderNotificationsModal();
+
+        if (unread > 0 && (showAttention || unread > previousUnread)) {
+            const firstUnread = notificationItems.find((item) => Number(item && item.is_read ? item.is_read : 0) === 0) || notificationItems[0];
+            const toastTitle = unread === 1 ? "1 new notification" : `${unread} new notifications`;
+            const toastCopy = firstUnread && firstUnread.title
+                ? String(firstUnread.title)
+                : "Open notifications to review updates.";
+            showNotificationToast(toastTitle, toastCopy);
+        }
+    } catch (error) {
+    }
+}
+
+async function markNotificationsRead(payload) {
+    try {
+        const response = await fetch(studentNotificationReadUrl, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json", Accept: "application/json" },
+            body: JSON.stringify(payload),
+        });
+        if (!response.ok) {
+            return false;
+        }
+        const data = await response.json();
+        return Boolean(data && data.ok);
+    } catch (error) {
+        return false;
+    }
+}
 
 async function syncStudentTicketState() {
     if (studentTicketStateReloading) {
@@ -353,14 +835,95 @@ async function syncStudentTicketState() {
     }
 }
 
+if (notificationBellBtn) {
+    notificationBellBtn.addEventListener("click", () => {
+        openNotificationModal();
+        refreshNotifications({ showAttention: false });
+        hideNotificationToast();
+    });
+}
+
+if (openNotificationsPanelBtn) {
+    openNotificationsPanelBtn.addEventListener("click", () => {
+        openNotificationModal();
+        refreshNotifications({ showAttention: false });
+        hideNotificationToast();
+    });
+}
+
+if (notificationToastOpenBtn) {
+    notificationToastOpenBtn.addEventListener("click", () => {
+        openNotificationModal();
+        refreshNotifications({ showAttention: false });
+        hideNotificationToast();
+    });
+}
+
+notificationCloseButtons.forEach((button) => {
+    button.addEventListener("click", closeNotificationModal);
+});
+
+if (notificationModalList) {
+    notificationModalList.addEventListener("click", async (event) => {
+        const itemButton = event.target.closest("[data-notification-id]");
+        if (!itemButton) {
+            return;
+        }
+
+        const notificationId = Number(itemButton.getAttribute("data-notification-id") || "0");
+        const isUnread = itemButton.getAttribute("data-notification-unread") === "1";
+
+        if (!isUnread || notificationId <= 0) {
+            return;
+        }
+
+        const ok = await markNotificationsRead({ id: notificationId });
+        if (ok) {
+            await refreshNotifications({ showAttention: false });
+        }
+    });
+}
+
+if (notificationMarkAllBtn) {
+    notificationMarkAllBtn.addEventListener("click", async () => {
+        const ok = await markNotificationsRead({ all: true });
+        if (ok) {
+            await refreshNotifications({ showAttention: false });
+        }
+    });
+}
+
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+        closeNotificationModal();
+        hideNotificationToast();
+    }
+});
+
+updateNotificationCounters(notificationUnreadCount);
+renderNotificationsModal();
+refreshNotifications({ showAttention: notificationUnreadCount > 0 });
+setInterval(refreshNotifications, 15000);
 setInterval(syncStudentTicketState, 5000);
 document.addEventListener("visibilitychange", () => {
     if (!document.hidden) {
         syncStudentTicketState();
+        refreshNotifications({ showAttention: false });
     }
 });
-window.addEventListener("focus", syncStudentTicketState);
-</script>';
+window.addEventListener("focus", () => {
+    syncStudentTicketState();
+    refreshNotifications({ showAttention: false });
+});
+</script>
+HTML;
+$script = strtr($scriptTemplate, [
+    '__TICKET_STATE_URL__' => $ticketStateUrl,
+    '__NOTIFICATION_FEED_URL__' => $notificationFeedUrl,
+    '__NOTIFICATION_READ_URL__' => $notificationReadUrl,
+    '__INITIAL_UNREAD_COUNT__' => (string) $initialUnreadCount,
+    '__TICKET_STATE_HASH__' => json_encode((string) ($ticketStateHash ?? '')),
+]);
 
 shell_end($script);
 ?>
