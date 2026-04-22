@@ -69,6 +69,8 @@
 }
 
 .scanner-result-surface {
+    position: relative;
+    overflow: hidden;
     height: 100%;
     min-height: 100%;
     display: flex;
@@ -78,6 +80,72 @@
     border-radius: 28px;
     background: linear-gradient(180deg, rgba(49, 19, 85, 0.5), rgba(27, 14, 55, 0.72));
     border: 1px solid rgba(255,255,255,0.08);
+    transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+}
+
+.scanner-result-surface::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    background:
+        radial-gradient(circle at 24% 22%, rgba(74, 222, 128, 0.26), transparent 44%),
+        linear-gradient(180deg, rgba(34, 197, 94, 0.18), rgba(34, 197, 94, 0.03));
+}
+
+.scanner-result-surface::after {
+    content: "";
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.52);
+    box-shadow: 0 0 0 0 rgba(74, 222, 128, 0);
+}
+
+.scanner-result-surface-success {
+    border-color: rgba(74, 222, 128, 0.62);
+    box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.25), 0 0 28px rgba(34, 197, 94, 0.25);
+}
+
+.scanner-result-surface-success::before {
+    animation: scanner-success-blink 1000ms ease-out forwards;
+}
+
+.scanner-result-surface-success::after {
+    background: #4ade80;
+    animation: scanner-success-ping 1000ms ease-out;
+}
+
+@keyframes scanner-success-blink {
+    0% {
+        opacity: 0;
+    }
+    24% {
+        opacity: 0.92;
+    }
+    55% {
+        opacity: 0.35;
+    }
+    84% {
+        opacity: 0.66;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes scanner-success-ping {
+    0% {
+        box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.58);
+    }
+    100% {
+        box-shadow: 0 0 0 16px rgba(74, 222, 128, 0);
+    }
 }
 
 .scanner-result-head h3 {
@@ -209,6 +277,8 @@ const startScannerBtn = document.getElementById("startScannerBtn");
 const stopScannerBtn = document.getElementById("stopScannerBtn");
 let stream = null;
 let busy = false;
+let successFeedbackTimer = null;
+let pingAudioContext = null;
 
 function setScannerControls(isActive, isPending = false) {
     startScannerBtn.disabled = isActive || isPending;
@@ -252,10 +322,60 @@ function statusClass(status) {
     return "scan-status scan-status-error";
 }
 
+function isSuccessStatus(status) {
+    return status === "admitted" || status === "in" || status === "out";
+}
+
+function playSuccessPing() {
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        if (!pingAudioContext) pingAudioContext = new AudioCtx();
+        if (pingAudioContext.state === "suspended") {
+            pingAudioContext.resume().catch(() => {});
+        }
+
+        const now = pingAudioContext.currentTime;
+        const oscillator = pingAudioContext.createOscillator();
+        const gain = pingAudioContext.createGain();
+
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(1046.5, now);
+        oscillator.frequency.exponentialRampToValueAtTime(1318.5, now + 0.08);
+
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.12, now + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+
+        oscillator.connect(gain);
+        gain.connect(pingAudioContext.destination);
+
+        oscillator.start(now);
+        oscillator.stop(now + 0.24);
+    } catch (error) {
+        // Ignore audio failures to avoid interrupting scan flow.
+    }
+}
+
+function triggerSuccessFeedback() {
+    if (!resultCard) return;
+
+    resultCard.classList.remove("scanner-result-surface-success");
+    void resultCard.offsetWidth;
+    resultCard.classList.add("scanner-result-surface-success");
+
+    if (successFeedbackTimer) clearTimeout(successFeedbackTimer);
+    successFeedbackTimer = setTimeout(() => {
+        resultCard.classList.remove("scanner-result-surface-success");
+    }, 1100);
+
+    playSuccessPing();
+}
+
 function renderResult(data) {
     const student = data.student || {};
     const lines = [];
-    const status = data.status || "error";
+    const status = String(data.status || "error").toLowerCase();
     lines.push("<span class=\"" + statusClass(status) + "\">" + status + "</span>");
     if (data.message) lines.push("<div>" + data.message + "</div>");
     if (student.name) lines.push("<div><strong>Name:</strong> " + student.name + "</div>");
@@ -264,6 +384,12 @@ function renderResult(data) {
     if (student.year) lines.push("<div><strong>Year:</strong> " + student.year + "</div>");
     resultBody.className = "scanner-result-copy";
     resultBody.innerHTML = lines.join("");
+
+    if (isSuccessStatus(status)) {
+        triggerSuccessFeedback();
+    } else {
+        resultCard.classList.remove("scanner-result-surface-success");
+    }
 }
 async function validateQr(token) {
     if (busy) return;
