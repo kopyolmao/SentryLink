@@ -78,6 +78,9 @@ class AdminController extends BaseController
                         $statusNotice = ' The event already ended, so it was automatically closed.';
                     }
 
+                    $shouldPrepareGateAfterSave = false;
+                    $savedEventId               = 0;
+
                     if ($eventId > 0) {
                         $existingEvent = $this->fetchOne(
                             'SELECT id, is_free, status, deleted_at FROM events WHERE id = ? LIMIT 1',
@@ -116,6 +119,10 @@ class AdminController extends BaseController
                              WHERE id = ?",
                             [$title, $description, $venue, $eventDate, $startTime, $endTime, $isFree, $ticketPrice, $capacity, $status, $eventId]
                         );
+                        $savedEventId = $eventId;
+                        if ($status === 'ongoing') {
+                            $shouldPrepareGateAfterSave = true;
+                        }
                         $this->portal->auditLog((int) $this->user['id'], 'EVENT_UPDATED', 'event', $eventId);
                         $message = 'Event updated.' . $statusNotice;
                     } else {
@@ -125,8 +132,18 @@ class AdminController extends BaseController
                              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())",
                             [$title, $description, $venue, $eventDate, $startTime, $endTime, $isFree, $ticketPrice, $capacity, $status, (int) $this->user['id']]
                         );
-                        $this->portal->auditLog((int) $this->user['id'], 'EVENT_CREATED', 'event', (int) $this->db->insertID());
+                        $savedEventId = (int) $this->db->insertID();
+                        if ($status === 'ongoing') {
+                            $shouldPrepareGateAfterSave = true;
+                        }
+                        $this->portal->auditLog((int) $this->user['id'], 'EVENT_CREATED', 'event', $savedEventId);
                         $message = 'Event created.' . $statusNotice;
+                    }
+
+                    if ($shouldPrepareGateAfterSave && $savedEventId > 0) {
+                        $count = $this->portal->prepareEventGate($savedEventId);
+                        $this->portal->auditLog((int) $this->user['id'], 'EVENT_GATE_PREPARED', 'event', $savedEventId);
+                        $message .= ' Gate attendees were refreshed for ' . $count . ' students.';
                     }
                 }
 
@@ -148,6 +165,12 @@ class AdminController extends BaseController
                     $status = strtolower(trim((string) ($event['status'] ?? '')));
                     if (in_array($status, ['closed', 'cancelled'], true)) {
                         throw new \RuntimeException('Cannot prepare gate for a closed or cancelled event.');
+                    }
+                    if ($status === 'ongoing') {
+                        throw new \RuntimeException('This event is already ongoing.');
+                    }
+                    if ($status !== 'open') {
+                        throw new \RuntimeException('Only open events can be started.');
                     }
 
                     if ($this->eventHasEnded((string) ($event['event_date'] ?? ''), (string) ($event['end_time'] ?? ''), $now)) {

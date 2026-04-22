@@ -405,7 +405,7 @@
             <?php foreach ($events as $event): ?>
                 <?php
                 $eventStatus = strtolower(trim((string) ($event['status'] ?? '')));
-                $canPrepareGate = ! event_has_ended($event) && ! in_array($eventStatus, ['closed', 'cancelled'], true);
+                $canPrepareGate = ! event_has_ended($event) && $eventStatus === 'open';
                 $canEditEvent = ! in_array($eventStatus, ['open', 'ongoing'], true);
                 $canArchiveEvent = ! in_array($eventStatus, ['open', 'ongoing'], true);
                 ?>
