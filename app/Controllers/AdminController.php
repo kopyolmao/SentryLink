@@ -566,43 +566,97 @@ class AdminController extends BaseController
     public function broadcast(): string
     {
         $message = '';
+        $error   = '';
+        $allowedRoles = ['student', 'ssg', 'admin', 'director', 'cashier'];
+        $allowedCourses = ['BSIT', 'BSCS', 'BSBA', 'BSHM', 'BSA', 'BSIS'];
+        $allowedYearLevels = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+        $allowedHouses = ['Azul', 'Cahel', 'Giallio', 'Roxxo', 'Vierrdy'];
+
+        $roleFilter   = '';
+        $courseFilter = '';
+        $yearFilter   = '';
+        $houseFilter  = '';
+        $title        = '';
+        $body         = '';
 
         if ($this->request->getMethod() === 'POST') {
-            $roleFilter   = (string) ($this->request->getPost('role') ?? '');
-            $courseFilter = trim((string) $this->request->getPost('course'));
-            $yearFilter   = trim((string) $this->request->getPost('year_level'));
-            $houseFilter  = trim((string) $this->request->getPost('house'));
-            $title        = trim((string) $this->request->getPost('title'));
-            $body         = trim((string) $this->request->getPost('message'));
-            $sql          = 'SELECT id FROM users WHERE is_active = 1 AND deleted_at IS NULL';
-            $params       = [];
+            try {
+                $roleFilter   = strtolower(trim((string) ($this->request->getPost('role') ?? '')));
+                $courseFilter = trim((string) $this->request->getPost('course'));
+                $yearFilter   = trim((string) $this->request->getPost('year_level'));
+                $houseFilter  = trim((string) $this->request->getPost('house'));
+                $title        = $this->portal->sanitizePlainInput((string) ($this->request->getPost('title') ?? ''), 120);
+                $body         = $this->portal->sanitizePlainInput((string) ($this->request->getPost('message') ?? ''), 2000, false);
+                $sql          = 'SELECT id FROM users WHERE is_active = 1 AND deleted_at IS NULL';
+                $params       = [];
 
-            if ($roleFilter !== '') {
-                $sql     .= ' AND role = ?';
-                $params[] = $roleFilter;
-            }
-            if ($courseFilter !== '') {
-                $sql     .= ' AND course = ?';
-                $params[] = $courseFilter;
-            }
-            if ($yearFilter !== '') {
-                $sql     .= ' AND year_level = ?';
-                $params[] = $yearFilter;
-            }
-            if ($houseFilter !== '') {
-                $sql     .= ' AND house = ?';
-                $params[] = $houseFilter;
-            }
+                if ($roleFilter !== '' && ! in_array($roleFilter, $allowedRoles, true)) {
+                    throw new \RuntimeException('Select a valid role filter.');
+                }
 
-            $recipients = $this->fetchAll($sql, $params);
-            foreach ($recipients as $recipient) {
-                $this->portal->notifyUser((int) $recipient['id'], $title, $body, 'info');
+                if ($title === '' || $body === '') {
+                    throw new \RuntimeException('Title and message are required.');
+                }
+
+                if ($roleFilter !== '') {
+                    $sql     .= ' AND role = ?';
+                    $params[] = $roleFilter;
+                }
+
+                if ($roleFilter === 'student') {
+                    if ($courseFilter !== '' && ! in_array($courseFilter, $allowedCourses, true)) {
+                        throw new \RuntimeException('Select a valid course filter.');
+                    }
+                    if ($yearFilter !== '' && ! in_array($yearFilter, $allowedYearLevels, true)) {
+                        throw new \RuntimeException('Select a valid year level filter.');
+                    }
+                    if ($houseFilter !== '' && ! in_array($houseFilter, $allowedHouses, true)) {
+                        throw new \RuntimeException('Select a valid house filter.');
+                    }
+
+                    if ($courseFilter !== '') {
+                        $sql     .= ' AND course = ?';
+                        $params[] = $courseFilter;
+                    }
+                    if ($yearFilter !== '') {
+                        $sql     .= ' AND year_level = ?';
+                        $params[] = $yearFilter;
+                    }
+                    if ($houseFilter !== '') {
+                        $sql     .= ' AND house = ?';
+                        $params[] = $houseFilter;
+                    }
+                } else {
+                    $courseFilter = '';
+                    $yearFilter   = '';
+                    $houseFilter  = '';
+                }
+
+                $recipients = $this->fetchAll($sql, $params);
+                foreach ($recipients as $recipient) {
+                    $this->portal->notifyUser((int) $recipient['id'], $title, $body, 'info');
+                }
+                $this->portal->auditLog((int) $this->user['id'], 'BROADCAST_SENT', 'notification', null);
+                $message = 'Broadcast sent to ' . count($recipients) . ' user(s).';
+            } catch (\Throwable $e) {
+                $error = $e->getMessage();
             }
-            $this->portal->auditLog((int) $this->user['id'], 'BROADCAST_SENT', 'notification', null);
-            $message = 'Broadcast sent to ' . count($recipients) . ' user(s).';
         }
 
-        return view('admin/broadcast', compact('message') + ['user' => $this->user]);
+        return view('admin/broadcast', compact(
+            'message',
+            'error',
+            'allowedRoles',
+            'allowedCourses',
+            'allowedYearLevels',
+            'allowedHouses',
+            'roleFilter',
+            'courseFilter',
+            'yearFilter',
+            'houseFilter',
+            'title',
+            'body'
+        ) + ['user' => $this->user]);
     }
 
     public function reports()
