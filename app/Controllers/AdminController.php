@@ -15,6 +15,109 @@ class AdminController extends BaseController
             'admissions' => (int) $this->scalar("SELECT COUNT(*) FROM admissions WHERE DATE(scanned_at) = CURDATE() AND status IN ('admitted', 'in')"),
         ];
 
+        $today      = $this->appNow()->setTime(0, 0, 0);
+        $trendDates = [];
+        for ($offset = 6; $offset >= 0; $offset--) {
+            $date = $today->modify('-' . $offset . ' days');
+            $iso  = $date->format('Y-m-d');
+            $trendDates[$iso] = [
+                'label'      => $date->format('M d'),
+                'admissions' => 0,
+                'tickets'    => 0,
+            ];
+        }
+
+        $admissionTrend = $this->fetchAll(
+            "SELECT DATE(scanned_at) AS day_date, COUNT(*) AS total
+             FROM admissions
+             WHERE scanned_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+             GROUP BY DATE(scanned_at)"
+        );
+        foreach ($admissionTrend as $row) {
+            $dateKey = (string) ($row['day_date'] ?? '');
+            if (isset($trendDates[$dateKey])) {
+                $trendDates[$dateKey]['admissions'] = (int) ($row['total'] ?? 0);
+            }
+        }
+
+        $ticketTrend = $this->fetchAll(
+            "SELECT DATE(issued_at) AS day_date, COUNT(*) AS total
+             FROM tickets
+             WHERE deleted_at IS NULL
+               AND issued_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+             GROUP BY DATE(issued_at)"
+        );
+        foreach ($ticketTrend as $row) {
+            $dateKey = (string) ($row['day_date'] ?? '');
+            if (isset($trendDates[$dateKey])) {
+                $trendDates[$dateKey]['tickets'] = (int) ($row['total'] ?? 0);
+            }
+        }
+
+        $eventStatusCounts = [
+            'draft'     => 0,
+            'open'      => 0,
+            'ongoing'   => 0,
+            'closed'    => 0,
+            'cancelled' => 0,
+        ];
+        $eventStatusRows = $this->fetchAll(
+            "SELECT status, COUNT(*) AS total
+             FROM events
+             WHERE deleted_at IS NULL
+             GROUP BY status"
+        );
+        foreach ($eventStatusRows as $row) {
+            $statusKey = strtolower(trim((string) ($row['status'] ?? '')));
+            if (array_key_exists($statusKey, $eventStatusCounts)) {
+                $eventStatusCounts[$statusKey] = (int) ($row['total'] ?? 0);
+            }
+        }
+
+        $ticketStatusCounts = [
+            'pending'   => 0,
+            'paid'      => 0,
+            'free'      => 0,
+            'cancelled' => 0,
+        ];
+        $ticketStatusRows = $this->fetchAll(
+            "SELECT payment_status, COUNT(*) AS total
+             FROM tickets
+             WHERE deleted_at IS NULL
+             GROUP BY payment_status"
+        );
+        foreach ($ticketStatusRows as $row) {
+            $statusKey = strtolower(trim((string) ($row['payment_status'] ?? '')));
+            if (array_key_exists($statusKey, $ticketStatusCounts)) {
+                $ticketStatusCounts[$statusKey] = (int) ($row['total'] ?? 0);
+            }
+        }
+
+        $topCourses = $this->fetchAll(
+            "SELECT COALESCE(NULLIF(TRIM(course), ''), 'Unassigned') AS course, COUNT(*) AS total
+             FROM users
+             WHERE role = 'student' AND deleted_at IS NULL
+             GROUP BY COALESCE(NULLIF(TRIM(course), ''), 'Unassigned')
+             ORDER BY total DESC, course ASC
+             LIMIT 6"
+        );
+
+        $analytics = [
+            'trend_labels'        => array_values(array_column($trendDates, 'label')),
+            'trend_admissions'    => array_values(array_column($trendDates, 'admissions')),
+            'trend_tickets'       => array_values(array_column($trendDates, 'tickets')),
+            'event_status_labels' => array_map(static fn (string $status): string => ucfirst($status), array_keys($eventStatusCounts)),
+            'event_status_values' => array_values($eventStatusCounts),
+            'ticket_mix_labels'   => array_map(static fn (string $status): string => ucfirst($status), array_keys($ticketStatusCounts)),
+            'ticket_mix_values'   => array_values($ticketStatusCounts),
+            'top_courses'         => array_map(static function (array $row): array {
+                return [
+                    'course' => (string) ($row['course'] ?? 'Unassigned'),
+                    'total'  => (int) ($row['total'] ?? 0),
+                ];
+            }, $topCourses),
+        ];
+
         $recentEvents = $this->fetchAll("SELECT id, title, event_date, status FROM events WHERE deleted_at IS NULL ORDER BY event_date DESC LIMIT 6");
         $recentAudit  = $this->fetchAll(
             "SELECT a.action, a.created_at, u.first_name, u.last_name
@@ -24,7 +127,7 @@ class AdminController extends BaseController
              LIMIT 8"
         );
 
-        return view('admin/dashboard', compact('metrics', 'recentEvents', 'recentAudit') + ['user' => $this->user]);
+        return view('admin/dashboard', compact('metrics', 'analytics', 'recentEvents', 'recentAudit') + ['user' => $this->user]);
     }
 
     public function events(): string
